@@ -1,0 +1,22 @@
+{
+  "name": "spawn.js",
+  "version": "0.1.0",
+  "main": "spawn.js",
+  "homepage": "https://github.com/atellmer/spawn.js",
+  "description": "lib for management of application state",
+  "keywords": [
+    "state",
+    "management"
+  ],
+  "authors": [
+    "AlexPlex"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
