@@ -3,6 +3,7 @@ var Spawn = (function () {
 
 	return (function () {
 		var state = {},
+				prevState = {},
 				virtualState = {},
 				subscribers = {};
 
@@ -18,7 +19,7 @@ var Spawn = (function () {
 			}
 
 			instance.getState = function () {
-				return JSON.parse(JSON.stringify(state));
+				return _clone(state);
 			}
 
 			instance.detect = function (zone, callback) {
@@ -32,7 +33,7 @@ var Spawn = (function () {
 				subscribers[zone].push(callback);
 
 				if (_findZoneValue(zone, state)) {
-					virtualState = _copy(state);
+					virtualState = _clone(state);
 
 					_applyLogic(zone);
 				}
@@ -42,7 +43,7 @@ var Spawn = (function () {
 
 			instance.update = function (zone, data) {
 				var zoneParts = zone.split('.'),
-						parent = _copy(state),
+						parent = _clone(state),
 						newState = parent,
 						key,
 						i;
@@ -58,11 +59,12 @@ var Spawn = (function () {
 					parent = parent[zoneParts[i]];
 				}
 
-				virtualState = _copy(newState);
+				virtualState = _clone(newState);
 
 				if (JSON.stringify(_findZoneValue(zone, state)) !== JSON.stringify(_findZoneValue(zone, virtualState))) {
-					state = _copy(newState);
+					state = _clone(virtualState);
 					_applyLogic(zone);
+					prevState = _clone(virtualState);
 				}
 
 				return instance;
@@ -70,7 +72,7 @@ var Spawn = (function () {
 
 			function _findZoneValue(zone, state) {
 				var zoneParts = zone.split('.'),
-						parent = _copy(state),
+						parent = _clone(state),
 						i;
 
 				for (i = 0; i < zoneParts.length; i++) {
@@ -93,7 +95,7 @@ var Spawn = (function () {
 							_mapSubscribers(key);
 						} else {
 							if (zone.length < key.length && key.match(new RegExp('^' + zone + '.', 'i')) !== null) {
-								if (_findZoneValue(key, state)) {
+								if (_findZoneValue(key, prevState) !== _findZoneValue(key, state)) {
 									_mapSubscribers(key);
 								}
 							}
@@ -115,7 +117,7 @@ var Spawn = (function () {
 				}
 			}
 
-			function _copy(target) {
+			function _clone(target) {
 				return JSON.parse(JSON.stringify(target));
 			}
 		}
