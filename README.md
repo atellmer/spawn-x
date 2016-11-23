@@ -14,6 +14,7 @@ bower install spawn.js --save
 
 ```javascript
 //Example #1
+
 var spawn$ = new Spawn();
 
 function callback() {
@@ -46,6 +47,7 @@ setTimeout(function() {
 ```
 ```javascript
 //Example #2 (Simple app)
+
 function TodoApp() {
 	var initialState = {
 		todos: []
