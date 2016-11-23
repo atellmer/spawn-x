@@ -1,4 +1,4 @@
-# Spawn.js
+ # Spawn.js
 #### Management of Application state... 
 (subscription on the data bit)
 
@@ -13,6 +13,7 @@ bower install spawn.js --save
 ```
 
 ```javascript
+//Example #1
 var spawn$ = new Spawn();
 
 function callback() {
@@ -42,4 +43,71 @@ setTimeout(function() {
 }, 2000);
 
 //console output: 'admin name: Jess'
+```
+```javascript
+//Example #2 (Simple app)
+function TodoApp() {
+	var initialState = {
+		todos: []
+	},
+	spawn$ = new Spawn(initialState);
+	
+    //subscribe
+	spawn$.detect('todos', combineActions);
+
+	function combineActions() {
+		var todos = spawn$.getState().todos;
+
+		if (todos.length > 0) {
+			console.log('All todos: ', reportAction(todos));
+			console.log('Completed todos:', getCountCompletedAction(todos));
+		}
+	}
+
+	function reportAction(todos) {
+		return todos.length;
+	}
+
+	function getCountCompletedAction(todos) {
+		return todos.filter(function(todo) {
+			return todo.complete === true;
+		}).length;
+	}
+
+	this.addTask = function (task) {
+	    //update
+		var todos = spawn$.getState().todos;
+
+		todos.push(task);
+		spawn$.update('todos', todos);
+	}
+}
+
+var app = new TodoApp();
+
+app.addTask({
+	action: 'Learn React',
+	complete: true
+});
+app.addTask({
+	action: 'Learn Angular 2',
+	complete: true
+});
+app.addTask({
+	action: 'Learn Meteor',
+	complete: false
+});
+
+/*
+console output:
+All todos:  1
+Completed todos: 1
+-----
+All todos:  2
+Completed todos: 2
+-----
+All todos:  3
+Completed todos: 2
+-----
+*/
 ```
