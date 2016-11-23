@@ -1,4 +1,4 @@
- # Spawn.js
+# Spawn.js
 #### Management of Application state... 
 (subscription on the data bit)
 
