@@ -1,0 +1,29 @@
+{
+	"name": "spawn-x",
+	"version": "0.2.0",
+	"description": "lib for management of Application state",
+	"main": "lib/index.js",
+	"homepage": "https://github.com/atellmer/spawn.js",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/atellmer/spawn.js.git"
+	},
+	"keywords": [
+		"state",
+		"store",
+		"app",
+		"redux",
+		"flux",
+		"mobx",
+		"observable",
+		"rxjs",
+		"reactive",
+		"react",
+		"reactjs",
+		"angular",
+		"angularjs",
+		"@angular"
+	],
+	"author": "AlexPlex",
+	"license": "MIT"
+}

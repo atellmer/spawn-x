@@ -4,17 +4,24 @@
 
 ![Spaun.js](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
 
+With bower:
 ```
 bower install spawn.js --save
 ```
-
 ```html
 <script src="bower_components/spawn.js/spawn.min.js"></script>
 ```
+With npm:
+```
+npm install spawn-x --save
+```
+```javascript
+var Spawn = require('spawn-x');
+```
 
+Examples:
 ```javascript
 //Example #1
-
 var spawn$ = new Spawn();
 
 function callback() {
@@ -47,7 +54,6 @@ setTimeout(function() {
 ```
 ```javascript
 //Example #2 (Simple app)
-
 function TodoApp() {
 	var initialState = {
 		todos: []
@@ -77,10 +83,10 @@ function TodoApp() {
 	}
 
 	this.addTask = function (task) {
+	    //update
 		var todos = spawn$.getState().todos;
 
 		todos.push(task);
-		//update
 		spawn$.update('todos', todos);
 	}
 }
@@ -102,13 +108,13 @@ app.addTask({
 
 /*
 console output:
-All todos: 1
+All todos:  1
 Completed todos: 1
 -----
-All todos: 2
+All todos:  2
 Completed todos: 2
 -----
-All todos: 3
+All todos:  3
 Completed todos: 2
 -----
 */
