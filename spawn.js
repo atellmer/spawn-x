@@ -1,127 +1,146 @@
 var Spawn = (function () {
-	'use strict';
+  'use strict';
 
-	return (function () {
-		var state = {},
-				prevState = {},
-				virtualState = {},
-				subscribers = {};
+  var state = {},
+      prevState = {},
+      virtualState = {},
+      subscribers = {};
+    
+    var SpawnCreator = function () {
+      var instance = this;
 
-		var SpawnCreator = function () {
-			var instance = this;
+      if (arguments[0]) {
+        if (!_isPlainObject(arguments[0])) {
+          throw new Error ('Spawn: the initial state must be plain object!');
+        }
 
-			if (arguments[0] && typeof arguments[0] === 'object') {
-				state = arguments[0];
-			}
+        state = arguments[0];
+      }
 
-			Spawn = function () {
-				return instance;
-			}
+      Spawn = function () {
+        return instance;
+      }
 
-			instance.getState = function () {
-				return _clone(state);
-			}
+      instance.getState = function () {
+        return _clone(state);
+      }
 
-			instance.detect = function (zone, callback) {
-				if (typeof callback !== 'function') {
-					console.warn('Detect method takes only a function!');
-					return instance;
-				}
-				if (!subscribers[zone]) {
-					subscribers[zone] = [];
-				}
-				subscribers[zone].push(callback);
+      instance.select = function (zone) {
+        if (zone === '*') {
+          return _clone(state);
+        }
 
-				if (_findZoneValue(zone, state)) {
-					virtualState = _clone(state);
+        return _findZoneValue(zone, state);
+      }
 
-					_applyLogic(zone);
-				}
+      instance.detect = function (zone, callback) {
+        if (typeof callback !== 'function') {
+          throw new Error ('Spawn: the detect method takes only a function for second argument!');
 
-				return instance;
-			}
+          return instance;
+        }
+        if (!subscribers[zone]) {
+          subscribers[zone] = [];
+        }
+        subscribers[zone].push(callback);
 
-			instance.update = function (zone, data) {
-				var zoneParts = zone.split('.'),
-						parent = _clone(state),
-						newState = parent,
-						key,
-						i;
+        if (_findZoneValue(zone, state)) {
+          virtualState = _clone(state);
 
-				for (i = 0; i < zoneParts.length; i++) {
-					if (!parent.hasOwnProperty(zoneParts[i])) {
-						parent[zoneParts[i]] = {};
-					}
-					if (i === zoneParts.length - 1) {
-						parent[zoneParts[i]] = data;
-						break;
-					}
-					parent = parent[zoneParts[i]];
-				}
+          _applyLogic(zone);
+        }
 
-				virtualState = _clone(newState);
+        return instance;
+      }
 
-				if (JSON.stringify(_findZoneValue(zone, state)) !== JSON.stringify(_findZoneValue(zone, virtualState))) {
-					state = _clone(virtualState);
-					_applyLogic(zone);
-					prevState = _clone(virtualState);
-				}
+      instance.update = function (zone, data) {
+        var zoneParts = zone.split('.'),
+            parent = _clone(state),
+            newState = parent,
+            key,
+            i;
 
-				return instance;
-			}
+        for (i = 0; i < zoneParts.length; i++) {
+          if (!parent.hasOwnProperty(zoneParts[i])) {
+            parent[zoneParts[i]] = {};
+          }
+          if (i === zoneParts.length - 1) {
+            parent[zoneParts[i]] = data;
+            break;
+          }
+          parent = parent[zoneParts[i]];
+        }
 
-			function _findZoneValue(zone, state) {
-				var zoneParts = zone.split('.'),
-						parent = _clone(state),
-						i;
+        virtualState = _clone(newState);
 
-				for (i = 0; i < zoneParts.length; i++) {
-					if (!parent.hasOwnProperty(zoneParts[i])) {
-						return false;
-					}
-					parent = parent[zoneParts[i]];
-				}
+        if (JSON.stringify(_findZoneValue(zone, state)) !== JSON.stringify(_findZoneValue(zone, virtualState))) {
+          state = _clone(virtualState);
+          _applyLogic(zone);
+          prevState = _clone(virtualState);
+        }
 
-				return parent;
-			}
+        return instance;
+      }
 
-			function _applyLogic(zone) {
-				var key,
-						i;
+      function _findZoneValue(zone, state) {
+        var zoneParts = zone.split('.'),
+            parent = _clone(state),
+            i;
 
-				for (key in subscribers) {
-					if (subscribers.hasOwnProperty(key)) {
-						if (key === zone) {
-							_mapSubscribers(key);
-						} else {
-							if (zone.length < key.length && key.match(new RegExp('^' + zone + '.', 'i')) !== null) {
-								if (_findZoneValue(key, prevState) !== _findZoneValue(key, state)) {
-									_mapSubscribers(key);
-								}
-							}
-							if (zone.length > key.length && zone.match(new RegExp('^' + key + '.', 'i')) !== null) {
-								_mapSubscribers(key);
-							}
-						}
-					}
-				}
-			}
+        for (i = 0; i < zoneParts.length; i++) {
+          if (!parent.hasOwnProperty(zoneParts[i])) {
+            return null;
+          }
+          parent = parent[zoneParts[i]];
+        }
 
-			function _mapSubscribers(key) {
-				var i;
+        return parent;
+      }
 
-				for (i = 0; i < subscribers[key].length; i++) {
-					if (typeof subscribers[key][i] === 'function') {
-						subscribers[key][i]();
-					}
-				}
-			}
+      function _applyLogic(zone) {
+        var key,
+            i;
 
-			function _clone(target) {
-				return JSON.parse(JSON.stringify(target));
-			}
-		}
+        for (key in subscribers) {
+          if (subscribers.hasOwnProperty(key)) {
+            if (key === zone) {
+              _mapSubscribers(key);
+            } else {
+              if (zone.length < key.length && new RegExp('^' + zone + '.', 'i').test(key)) {
+                if (_findZoneValue(key, prevState) !== _findZoneValue(key, state)) {
+                  _mapSubscribers(key);
+                }
+              }
+              if (zone.length > key.length && new RegExp('^' + key + '.', 'i').test(zone)) {
+                _mapSubscribers(key);
+              }
+            }
+          }
+        }
+      }
 
-		return SpawnCreator;
-	})();
+      function _mapSubscribers(key) {
+        var i;
+
+        for (i = 0; i < subscribers[key].length; i++) {
+          subscribers[key][i]();
+        }
+      }
+
+      function _clone(target) {
+        return JSON.parse(JSON.stringify(target));
+      }
+
+      function _isPlainObject(target) {
+        var stringTarget = Object.prototype.toString.call(target);
+
+        if (typeof target === 'object' && stringTarget.slice(8, stringTarget.length - 1).toLowerCase() !== 'array') {
+          return true;
+        }
+
+        return false;
+      }
+    }
+
+    return SpawnCreator;
 })();
