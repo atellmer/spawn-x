@@ -27,7 +27,7 @@ const Spawn = require('spawn-x');
 const spawn$ = new Spawn();
 ```
 ## API:
-Spawn object after init will be a singletone and he will only have 4 methods:
+Spawn object after init will be a singleton and he will only have 4 methods:
 
 select() method return selected zone from app state. If zone will be equal '*', this method returns full app state.
 ```javascript
