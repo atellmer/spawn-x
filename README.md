@@ -14,7 +14,8 @@ bower install spawn.js --save
 ```
 ```html
 <script src="bower_components/spawn.js/spawn.min.js"></script>
-
+```
+```javascript
 var spawn$ = new Spawn();
 ```
 With npm:
