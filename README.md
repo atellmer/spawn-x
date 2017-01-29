@@ -4,7 +4,7 @@
 ![Spaun.js](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
 
 ## About
-Spawn is a simple and super small library without dependencies for managment of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object.
+Spawn is a simple and super small library without dependencies for management of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object.
 
 
 ## install
