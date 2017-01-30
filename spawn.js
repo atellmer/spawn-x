@@ -44,7 +44,7 @@ var Spawn = (function () {
 
       instance.detect = function (zone, callback) {
         if (typeof zone !== 'string') {
-          throw new Error ('Spawn: the detect method takes only a atring for first argument!');
+          throw new Error ('Spawn: the detect method takes only a string for first argument!');
         }
 
         if (typeof callback !== 'function') {
@@ -78,7 +78,7 @@ var Spawn = (function () {
 
       instance.update = function (zone, data) {
         if (typeof zone !== 'string') {
-          throw new Error ('Spawn: the update method takes only a atring for first argument!');
+          throw new Error ('Spawn: the update method takes only a string for first argument!');
         }
 
         var zoneParts = zone.split('.'),
