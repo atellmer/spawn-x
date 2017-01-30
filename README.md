@@ -42,7 +42,7 @@ spawn$.select(function (state) { return state.roles.admins[2] }); // ES5
 spawn$.select(state => state.roles.admins[2]); // ES2015
 ```
 
-detect() method makes subscribe for data zone change and apply callback if zone updated. Returns instance object for chaining. If zone will be equal '*'. this method makes subscribe for all changes.
+detect() method makes subscribe for data zone change and apply callback if zone updated. If zone will be equal '*', this method makes subscribe for all changes. Returns instance object for chaining. 
 
 ```javascript
 // Signature:
@@ -58,7 +58,7 @@ spawn$.detect('*', function() {
 });
 ```
 
-update() method for updates zone. Returns instance object for chaining.
+update() method for updates zone. If zone will be equal '*', this method replaces app state on new state and apply all callbacks without checking. It is may be useful to implementation something like time traveling and others. Returns instance object for chaining.
 ```javascript
 // Signature:
 update(zone: string, data: any): instance 
@@ -71,6 +71,9 @@ var admins = [
 { id: 2, name: 'Kate Jensen' },
 ];
 spawn$.update('roles.admins', admins);
+
+var oldState = JSON.parse(localStorage.getItem('APP_STATE_1'));
+spawn$.update('*', oldState);
 ```
 
 getState() method returns app state similar select('*')
@@ -83,7 +86,7 @@ getState(): any
 var appState = spawn$.getState();
 ```
 
-Note: Spawn in the initialization process might accept simple object as initial app state.
+Note: Spawn in the initialization process might accept plain object as initial app state.
 
 Note: Spawn doesn't apply the callback if current data equal privious data.
 

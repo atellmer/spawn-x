@@ -66,7 +66,7 @@ var Spawn = (function () {
         } else {
           return instance;
         }
-       
+      
         if (_findZoneValue(zone, state)) {
           virtualState = _clone(state);
 
@@ -86,6 +86,19 @@ var Spawn = (function () {
             newState = parent,
             key,
             i;
+
+        if (zone === '*') {
+          if (_isPlainObject(data)) {
+            state = _clone(data);
+            prevState = {};
+            virtualState = {};
+            _autorun();
+
+            return instance;
+          }
+
+          throw new Error ('Spawn: the update method takes only a plain object for replace full state! Check your update(\'*\') method.');
+        }
 
         for (i = 0; i < zoneParts.length; i++) {
           if (!parent.hasOwnProperty(zoneParts[i])) {
@@ -136,7 +149,6 @@ var Spawn = (function () {
               if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
                 if (JSON.stringify(_findZoneValue(key, prevState)) !== JSON.stringify(_findZoneValue(key, state))) {
                   _mapSubscribers(subscribers[key]);
-
                 }
               }
               if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
@@ -148,12 +160,35 @@ var Spawn = (function () {
         _mapSubscribers(subscribers['*']);
       }
 
+
+      function _autorun() {
+        var key;
+  
+        for (key in subscribers) {
+          if (subscribers.hasOwnProperty(key)) {
+            _mapSubscribers(subscribers[key]);
+          }
+        }
+      }
+
       function _mapSubscribers(subscribersFromKey) {
         var i;
 
         for (i = 0; i < subscribersFromKey.length; i++) {
           subscribersFromKey[i]();
         }
+      }
+
+      function _checkCallback(subscribersFromZone, callback) {
+        var i;
+
+        for (i = 0; i < subscribersFromZone.length; i++) {
+          if (subscribersFromZone[i] === callback) {
+            return false;
+          }
+        }
+
+        return true;
       }
 
       function _clone(target) {
@@ -168,18 +203,6 @@ var Spawn = (function () {
         }
 
         return false;
-      }
-
-      function _checkCallback(subscribersFromZone, callback) {
-        var i;
-
-        for (i = 0; i < subscribersFromZone.length; i++) {
-          if (subscribersFromZone[i] === callback) {
-            return false;
-          }
-        }
-
-        return true;
       }
     }
 
