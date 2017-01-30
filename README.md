@@ -13,7 +13,7 @@ With bower:
 bower install spawn.js --save
 ```
 ```html
-<script src="bower_components/spawn.js/spawn.min.js"></script>
+<script src="path/to/spawn.js/spawn.min.js"></script>
 ```
 ```javascript
 var spawn$ = new Spawn();
@@ -29,25 +29,58 @@ const spawn$ = new Spawn();
 ## API:
 Spawn object after init will be a singleton and he will only have 4 methods:
 
-select() method return selected zone from app state. If zone will be equal '*', this method returns full app state.
+select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. if zone will be a function, method puts the app state in the function argument and apply it.
 ```javascript
-select(zone: string): any 
+// Signature:
+select(zone: string | function): any 
+```
+```javascript
+// Examples:
+spawn$.select('roles.admins');
+spawn$.select('*'); // full app state
+spawn$.select(function (state) { return state.roles.admins[2] }); // ES5
+spawn$.select(state => state.roles.admins[2]); // ES2015
 ```
 
-detect() method makes subscribe for data zone change and apply callback if zone updated. Returns instance object for chaining.
+detect() method makes subscribe for data zone change and apply callback if zone updated. Returns instance object for chaining. If zone will be equal '*'. this method makes subscribe for all changes.
 
 ```javascript
+// Signature:
 detect(zone: string, callback: function): instance
+```
+```javascript
+// Examples:
+spawn$.detect('roles.admins', function() {
+  var admins = spawn$.select('roles.admins');
+});
+spawn$.detect('*', function() {
+  console.log('something happened!');
+});
 ```
 
 update() method for updates zone. Returns instance object for chaining.
 ```javascript
+// Signature:
 update(zone: string, data: any): instance 
+```
+```javascript
+// Examples:
+var admins = [
+{ id: 0, name: 'John Doe' },
+{ id: 1, name: 'Alex Smith' },
+{ id: 2, name: 'Kate Jensen' },
+];
+spawn$.update('roles.admins', admins);
 ```
 
 getState() method returns app state similar select('*')
 ```javascript
+// Signature:
 getState(): any
+```
+```javascript
+// Examples:
+var appState = spawn$.getState();
 ```
 
 Note: Spawn in the initialization process might accept simple object as initial app state.
@@ -62,8 +95,8 @@ Examples:
 var spawn$ = new Spawn();
 
 function callback() {
-    var admins = spawn$.select('users.admins');
-    console.log('admin name: ', admins[0].name);
+    var admin = spawn$.select(function(state) { return state.users.admins[0].name });
+    console.log('admin name: ', admin);
 }
 
 //subscribe
@@ -71,91 +104,132 @@ spawn$.detect('users.admins', callback);
 
 //update
 spawn$.update('users', {
-	admins: [
-		{ id: 0, name: 'John' },
-		{ id: 1, name: 'Alex' }
-	]
+  admins: [
+    { id: 0, name: 'John' },
+    { id: 1, name: 'Alex' }
+  ]
 });
 //console output: 'admin name: John'
 
 setTimeout(function() {
-	spawn$.update('users', {
-		admins: [
-			{ id: 0, name: 'Jess' },
-			{ id: 1, name: 'Alex' }
-		]
-	});
+  spawn$.update('users', {
+    admins: [
+      { id: 0, name: 'Jess' },
+      { id: 1, name: 'Alex' }
+    ]
+  });
 }, 2000);
 
 //console output: 'admin name: Jess'
 ```
 ```javascript
 //Example #2 (Simple app)
-function TodoApp() {
-	var initialState = {
-		todos: []
-	},
-	spawn$ = new Spawn(initialState);
-	
-    //subscribe
-	spawn$.detect('todos', combineActions);
+var initialState = {
+  todos: []
+},
+spawn$ = new Spawn(initialState);
 
-	function combineActions() {
-	    // select
-		var todos = spawn$.select('todos');
+function TodoApp(spawn$) {
+  spawn$.detect('todos', combineActions);
 
-		if (todos.length > 0) {
-			console.log('All todos: ', reportAction(todos));
-			console.log('Completed todos:', getCountCompletedAction(todos));
-		}
-	}
+  function combineActions() {
+    var todos = spawn$.select('todos');
 
-	function reportAction(todos) {
-		return todos.length;
-	}
+    if (todos.length > 0) {
+      console.log('All todos: ', reportAction(todos));
+      console.log('Completed todos:', getCountCompletedAction(todos));
+      console.log('-----');
+    }
+  }
 
-	function getCountCompletedAction(todos) {
-		return todos.filter(function(todo) {
-			return todo.complete === true;
-		}).length;
-	}
+  function reportAction(todos) {
+    return todos.length;
+  }
 
-	this.addTask = function (task) {
-	    // select
-		var todos = spawn$.select('todos');
+  function getCountCompletedAction(todos) {
+    return todos.filter(function(todo) {
+      return todo.complete === true;
+    }).length;
+  }
 
-		todos.push(task);
-		
-	    //update
-		spawn$.update('todos', todos);
-	}
+  this.addTask = function (task) {
+    spawn$.update('todos', spawn$.select('todos').concat(task));
+  }
+
+  this.removeTask = function (id) {
+    var filteredTasks = spawn$
+      .select('todos')
+      .filter(function(task) {
+        return task.id !== id;
+      });
+
+    spawn$.update('todos', filteredTasks);
+  }
+
+  this.completeTask = function (id, complete) {
+    var updatedTasks = spawn$
+      .select('todos')
+      .map(function(task) {
+        if (task.id === id) {
+          task.complete = complete;
+        }
+
+        return task;
+      });
+
+    spawn$.update('todos', updatedTasks);
+  }
 }
 
-var app = new TodoApp();
+
+TodoApp.logger = function(spawn$) {
+  spawn$.detect('*', function() {
+    console.log('logger: ', spawn$.select('*'));
+  });
+}
+
+
+///////////////////////////
+var app = new TodoApp(spawn$);
+TodoApp.logger(spawn$);
 
 app.addTask({
-	action: 'Learn React',
-	complete: true
+  id: 0,
+  action: 'Learn React',
+  complete: true
 });
+
 app.addTask({
-	action: 'Learn Angular 2',
-	complete: true
+  id: 1,
+  action: 'Learn Angular',
+  complete: true
 });
+
 app.addTask({
-	action: 'Don\'t be the asshole',
-	complete: false
+  id: 2,
+  action: 'Don\'t be the asshole',
+  complete: false
 });
+
+app.completeTask(2, true);
 
 /*
 console output:
+
 All todos:  1
 Completed todos: 1
 -----
+logger: ...
 All todos:  2
 Completed todos: 2
 -----
+logger: ...
 All todos:  3
 Completed todos: 2
 -----
+All todos:  3
+Completed todos: 3
+-----
+logger: ...
 */
 ```
