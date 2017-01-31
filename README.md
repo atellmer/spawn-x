@@ -29,7 +29,7 @@ const spawn$ = new Spawn();
 ## API:
 Spawn object after init will be a singleton and he will only have 4 methods:
 
-select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. if zone will be a function, method puts the app state in the function argument and apply it.
+select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. If zone will be equal '->', this method returns lastest updated zone name. if zone will be a function, method puts the app state in the function argument and apply it.
 ```javascript
 // Signature:
 select(zone: string | function): any 
@@ -38,6 +38,7 @@ select(zone: string | function): any
 // Examples:
 spawn$.select('roles.admins');
 spawn$.select('*'); // full app state
+spawn$.select('->'); // latest updated zone name, for example 'roles.admins'
 spawn$.select(function (state) { return state.roles.admins[2] }); // ES5
 spawn$.select(state => state.roles.admins[2]); // ES2015
 ```
@@ -139,9 +140,9 @@ function TodoApp(spawn$) {
     var todos = spawn$.select('todos');
 
     if (todos.length > 0) {
+      console.log('-----');
       console.log('All todos: ', reportAction(todos));
       console.log('Completed todos:', getCountCompletedAction(todos));
-      console.log('-----');
     }
   }
 
@@ -157,6 +158,7 @@ function TodoApp(spawn$) {
 
   this.addTask = function (task) {
     spawn$.update('todos', spawn$.select('todos').concat(task));
+    spawn$.update('@ACTIONS.ADD_TASK', new Date());
   }
 
   this.removeTask = function (id) {
@@ -167,6 +169,7 @@ function TodoApp(spawn$) {
       });
 
     spawn$.update('todos', filteredTasks);
+    spawn$.update('@ACTIONS.REMOVE_TASK', new Date());
   }
 
   this.completeTask = function (id, complete) {
@@ -181,13 +184,13 @@ function TodoApp(spawn$) {
       });
 
     spawn$.update('todos', updatedTasks);
+    spawn$.update('@ACTIONS.CHANGE_COMPLETE', new Date());
   }
 }
 
-
 TodoApp.logger = function(spawn$) {
   spawn$.detect('*', function() {
-    console.log('logger: ', spawn$.select('*'));
+    console.log('logger: ', spawn$.select('->') + ' -> ', spawn$.select('*'));
   });
 }
 
@@ -216,23 +219,35 @@ app.addTask({
 
 app.completeTask(2, true);
 
+app.removeTask(1);
+
 /*
 console output:
 
+-----
 All todos:  1
 Completed todos: 1
+logger: todos -> ...
+logger: @ACTIONS.ADD_TASK -> ...
 -----
-logger: ...
 All todos:  2
 Completed todos: 2
+logger: todos -> ...
+logger: @ACTIONS.ADD_TASK -> ...
 -----
-logger: ...
 All todos:  3
 Completed todos: 2
+logger: todos -> ...
+logger: @ACTIONS.ADD_TASK -> ...
 -----
 All todos:  3
 Completed todos: 3
+logger: todos -> ...
+logger: @ACTIONS.CHANGE_COMPLETE -> ...
 -----
-logger: ...
+All todos:  2
+Completed todos: 2
+logger: todos -> ...
+logger: @ACTIONS.REMOVE_TASK -> ...
 */
 ```
