@@ -13,7 +13,7 @@ With bower:
 bower install spawn.js --save
 ```
 ```html
-<script src="path/to/spawn.js/spawn.min.js"></script>
+<script src="path/to/spawn.js/src/browser/spawn.min.js"></script>
 ```
 ```javascript
 var spawn$ = new Spawn();
@@ -251,3 +251,6 @@ logger: todos -> ...
 logger: @ACTIONS.REMOVE_TASK -> ...
 */
 ```
+## License
+
+MIT © [Alex Plex](https://github.com/atellmer)
