@@ -44,7 +44,7 @@ function autorun(subscribers, cb) {
   }
 }
 
-function applyLogic(zone, subscribers) {
+function applyLogic(zone, subscribers, state, prevState) {
   for (let key in subscribers) {
     if (subscribers.hasOwnProperty(key)) {
       if (key === zone) {

@@ -1,6 +1,6 @@
 {
   "name": "spawn.js",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "lib for management of application state",
   "authors": [
     "AlexPlex"

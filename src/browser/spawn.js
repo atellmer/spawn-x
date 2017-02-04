@@ -69,7 +69,7 @@ var Spawn = (function () {
       if (findZoneValue(zone, state)) {
         virtualState = clone(state);
 
-        applyLogic(zone, subscribers);
+        applyLogic(zone, subscribers, state, prevState);
       }
 
       return instance;
@@ -116,7 +116,7 @@ var Spawn = (function () {
 
       if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
         state = clone(virtualState);
-        applyLogic(zone, subscribers);
+        applyLogic(zone, subscribers, state, prevState);
         prevState = clone(virtualState);
       } else {
         mapSubscribers(subscribers['*']);
@@ -144,7 +144,7 @@ var Spawn = (function () {
       return JSON.stringify(findZoneValue(zone, state));
     }
 
-    function applyLogic(zone, subscribers) {
+    function applyLogic(zone, subscribers, state, prevState) {
       var key;
 
       for (key in subscribers) {
