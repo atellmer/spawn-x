@@ -1,7 +1,7 @@
 'use strict';
 
 function clone(target) {
-  return JSON.parse(JSON.stringify(target));
+  return Object.assign({}, target);
 }
 
 function mapSubscribers(subscribers) {
