@@ -190,7 +190,9 @@ function TodoApp(spawn$) {
 
 TodoApp.logger = function(spawn$) {
   spawn$.detect('*', function() {
-    console.log('logger: ', spawn$.select('->') + ' -> ', spawn$.select('*'));
+    if (/@ACTIONS/.test(spawn$.select('->'))) {
+      console.log('logger: ', spawn$.select('->') + ' -> ', spawn$.select('*'));
+    }
   });
 }
 
@@ -227,30 +229,25 @@ console output:
 -----
 All todos:  1
 Completed todos: 1
-logger: todos -> ...
 logger: @ACTIONS.ADD_TASK -> ...
 -----
 All todos:  2
 Completed todos: 2
-logger: todos -> ...
 logger: @ACTIONS.ADD_TASK -> ...
 -----
 All todos:  3
 Completed todos: 2
-logger: todos -> ...
 logger: @ACTIONS.ADD_TASK -> ...
 -----
 All todos:  3
 Completed todos: 3
-logger: todos -> ...
 logger: @ACTIONS.CHANGE_COMPLETE -> ...
 -----
 All todos:  2
 Completed todos: 2
-logger: todos -> ...
 logger: @ACTIONS.REMOVE_TASK -> ...
 */
 ```
-## License
+## LICENSE
 
 MIT © [Alex Plex](https://github.com/atellmer)
