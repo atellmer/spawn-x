@@ -1,6 +1,6 @@
 {
   "name": "spawn-x",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "description": "lib for management of Application state",
   "author": "AlexPlex",
   "license": "MIT",

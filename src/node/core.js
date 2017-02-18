@@ -1,7 +1,7 @@
 'use strict';
 
 function clone(target) {
-  return Object.assign({}, target);
+  return JSON.parse(JSON.stringify(target));
 }
 
 function mapSubscribers(subscribers) {
@@ -44,7 +44,7 @@ function autorun(subscribers, cb) {
   }
 }
 
-function applyLogic(zone, subscribers, state, prevState) {
+function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
   for (let key in subscribers) {
     if (subscribers.hasOwnProperty(key)) {
       if (key === zone) {
@@ -63,7 +63,9 @@ function applyLogic(zone, subscribers, state, prevState) {
       }
     }
   }
-  mapSubscribers(subscribers['*']);
+  if (afterUpdate) {
+    mapSubscribers(subscribers['*']);
+  }
 }
 
 module.exports = {

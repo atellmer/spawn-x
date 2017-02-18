@@ -43,7 +43,7 @@ var Spawn = (function () {
         return selector(clone(state));
       }
 
-      throw new Error('Spawn: the select method takes only a string or function as argument!');
+      error('Spawn: the select method takes only a string or function as argument!');
     }
 
     instance.detect = function (zone, callback) {
@@ -68,8 +68,7 @@ var Spawn = (function () {
 
       if (findZoneValue(zone, state)) {
         virtualState = clone(state);
-
-        applyLogic(zone, subscribers, state, prevState);
+        applyLogic(zone, subscribers, state, prevState, false);
       }
 
       return instance;
@@ -116,7 +115,7 @@ var Spawn = (function () {
 
       if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
         state = clone(virtualState);
-        applyLogic(zone, subscribers, state, prevState);
+        applyLogic(zone, subscribers, state, prevState, true);
         prevState = clone(virtualState);
       } else {
         mapSubscribers(subscribers['*']);
@@ -144,7 +143,7 @@ var Spawn = (function () {
       return JSON.stringify(findZoneValue(zone, state));
     }
 
-    function applyLogic(zone, subscribers, state, prevState) {
+    function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
       var key;
 
       for (key in subscribers) {
@@ -165,7 +164,9 @@ var Spawn = (function () {
           }
         }
       }
-      mapSubscribers(subscribers['*']);
+      if (afterUpdate) {
+        mapSubscribers(subscribers['*']);
+      }
     }
 
     function autorun(subscribers, cb) {
