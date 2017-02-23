@@ -1,235 +1,234 @@
-var Spawn = (function () {
+var Spawn = function () {
   'use strict';
 
   var state = {},
       prevState = {},
       virtualState = {},
       subscribers = { '*': [] },
-      lastZone = '@@SPAWN/INIT';
+      lastZone = '@@SPAWN/INIT',
+      instance = this;
 
-  var SpawnCreator = function () {
-    var instance = this;
+  if (arguments[0]) {
+    if (!isPlainObject(arguments[0])) error('Spawn: the initial state must be plain object!');
 
-    if (arguments[0]) {
-      if (!isPlainObject(arguments[0])) error('Spawn: the initial state must be plain object!');
+    state = arguments[0];
+  }
 
-      state = arguments[0];
+  Spawn = function () {
+    return instance;
+  }
+
+  instance.getState = function () {
+    return clone(state);
+  }
+
+  instance.select = function (selector) {
+    if (isString(selector)) {
+      switch (selector) {
+      case '*':
+        {
+          return clone(state);
+        }
+      case '->':
+        {
+          return lastZone;
+        }
+      default:
+        return findZoneValue(selector, state);
+      }
+    }
+    if (isFunc(selector)) {
+      return selector(clone(state));
     }
 
-    Spawn = function () {
+    error('Spawn: the select method takes only a string or function as argument!');
+  }
+
+  instance.detect = function (zone, callback) {
+    if (!isString(zone)) error('Spawn: the detect method takes only a string for first argument!');
+    if (!isFunc(callback)) error('Spawn: the detect method takes only a function for second argument!');
+
+    if (!subscribers[zone]) {
+      subscribers[zone] = [];
+    }
+
+    if (zone === '*' && checkCallback(subscribers[zone], callback)) {
+      subscribers[zone].push(callback);
+
       return instance;
     }
 
-    instance.getState = function () {
-      return clone(state);
+    if (checkCallback(subscribers[zone], callback)) {
+      subscribers[zone].push(callback);
+    } else {
+      return instance;
     }
 
-    instance.select = function (selector) {
-      if (isString(selector)) {
-        switch (selector) {
-        case '*':
-          {
-            return clone(state);
-          }
-        case '->':
-          {
-            return lastZone;
-          }
-        default:
-          return findZoneValue(selector, state);
-        }
-      }
-      if (isFunc(selector)) {
-        return selector(clone(state));
-      }
-
-      error('Spawn: the select method takes only a string or function as argument!');
+    if (findZoneValue(zone, state)) {
+      virtualState = clone(state);
+      applyLogic(zone, subscribers, state, prevState, false);
     }
 
-    instance.detect = function (zone, callback) {
-      if (!isString(zone)) error('Spawn: the detect method takes only a string for first argument!');
-      if (!isFunc(callback)) error('Spawn: the detect method takes only a function for second argument!');
+    return instance;
+  }
 
-      if (!subscribers[zone]) {
-        subscribers[zone] = [];
-      }
+  instance.update = function (zone, data) {
+    if (!isString(zone)) error('Spawn: the update method takes only a string for first argument!');
 
-      if (zone === '*' && checkCallback(subscribers[zone], callback)) {
-        subscribers[zone].push(callback);
+    var zoneParts = zone.split('.'),
+        parent = clone(state),
+        newState = parent,
+        key,
+        i;
+
+    if (zone === '*') {
+      if (isPlainObject(data)) {
+        state = clone(data);
+        prevState = {};
+        virtualState = {};
+        autorun(subscribers, function(key) {
+          lastZone = key;
+        });
 
         return instance;
       }
 
-      if (checkCallback(subscribers[zone], callback)) {
-        subscribers[zone].push(callback);
-      } else {
-        return instance;
-      }
-
-      if (findZoneValue(zone, state)) {
-        virtualState = clone(state);
-        applyLogic(zone, subscribers, state, prevState, false);
-      }
-
-      return instance;
+      error('Spawn: the update method takes only a plain object for replace full state! Check your update(\'*\') method.');
     }
 
-    instance.update = function (zone, data) {
-      if (!isString(zone)) error('Spawn: the update method takes only a string for first argument!');
+    lastZone = zone;
 
-      var zoneParts = zone.split('.'),
-          parent = clone(state),
-          newState = parent,
-          key,
-          i;
-
-      if (zone === '*') {
-        if (isPlainObject(data)) {
-          state = clone(data);
-          prevState = {};
-          virtualState = {};
-          autorun(subscribers, function(key) {
-            lastZone = key;
-          });
-
-          return instance;
-        }
-
-        error('Spawn: the update method takes only a plain object for replace full state! Check your update(\'*\') method.');
+    for (i = 0; i < zoneParts.length; i++) {
+      if (!parent.hasOwnProperty(zoneParts[i])) {
+        parent[zoneParts[i]] = {};
       }
-
-      lastZone = zone;
-
-      for (i = 0; i < zoneParts.length; i++) {
-        if (!parent.hasOwnProperty(zoneParts[i])) {
-          parent[zoneParts[i]] = {};
-        }
-        if (i === zoneParts.length - 1) {
-          parent[zoneParts[i]] = data;
-          break;
-        }
-        parent = parent[zoneParts[i]];
+      if (i === zoneParts.length - 1) {
+        parent[zoneParts[i]] = data;
+        break;
       }
-
-      virtualState = clone(newState);
-
-      if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
-        state = clone(virtualState);
-        applyLogic(zone, subscribers, state, prevState, true);
-        prevState = clone(virtualState);
-      } else {
-        mapSubscribers(subscribers['*']);
-      }
-
-      return instance;
+      parent = parent[zoneParts[i]];
     }
 
-    function findZoneValue(zone, state) {
-      var zoneParts = zone.split('.'),
-          parent = clone(state),
-          i;
+    virtualState = clone(newState);
 
-      for (i = 0; i < zoneParts.length; i++) {
-        if (!parent.hasOwnProperty(zoneParts[i])) {
-          return null;
-        }
-        parent = parent[zoneParts[i]];
-      }
-
-      return parent;
+    if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
+      state = clone(virtualState);
+      applyLogic(zone, subscribers, state, prevState, true);
+      prevState = clone(virtualState);
+    } else {
+      mapSubscribers(subscribers['*']);
     }
 
-    function plainZoneValue(zone, state) {
-      return JSON.stringify(findZoneValue(zone, state));
+    return instance;
+  }
+
+  function findZoneValue(zone, state) {
+    var zoneParts = zone.split('.'),
+        parent = clone(state),
+        i;
+
+    for (i = 0; i < zoneParts.length; i++) {
+      if (!parent.hasOwnProperty(zoneParts[i])) {
+        return null;
+      }
+      parent = parent[zoneParts[i]];
     }
 
-    function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
-      var key;
+    return parent;
+  }
 
-      for (key in subscribers) {
-        if (subscribers.hasOwnProperty(key)) {
-          if (key === zone) {
-            mapSubscribers(subscribers[key]);
-            continue;
-          }
-          if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
-            if (plainZoneValue(key, prevState) !== plainZoneValue(key, state)) {
-              mapSubscribers(subscribers[key]);
-              continue;
-            }
-          }
-          if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
-            mapSubscribers(subscribers[key]);
-            continue;
-          }
-        }
-      }
-      if (afterUpdate) {
-        mapSubscribers(subscribers['*']);
-      }
-    }
+  function plainZoneValue(zone, state) {
+    return JSON.stringify(findZoneValue(zone, state));
+  }
 
-    function autorun(subscribers, cb) {
-      var key;
+  function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
+    var key;
 
-      for (key in subscribers) {
-        if (subscribers.hasOwnProperty(key)) {
-          cb(key);
+    for (key in subscribers) {
+      if (subscribers.hasOwnProperty(key)) {
+        if (key === zone) {
           mapSubscribers(subscribers[key]);
-          mapSubscribers(subscribers['*']);
+          continue;
+        }
+        if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
+          if (plainZoneValue(key, prevState) !== plainZoneValue(key, state)) {
+            mapSubscribers(subscribers[key]);
+            continue;
+          }
+        }
+        if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
+          mapSubscribers(subscribers[key]);
+          continue;
         }
       }
     }
-
-    function mapSubscribers(subscribers) {
-      var i;
-
-      for (i = 0; i < subscribers.length; i++) {
-        subscribers[i]();
-      }
-    }
-
-    function checkCallback(subscribers, callback) {
-      var i;
-
-      for (i = 0; i < subscribers.length; i++) {
-        if (subscribers[i] === callback) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-
-    function clone(target) {
-      return JSON.parse(JSON.stringify(target));
-    }
-
-    function isPlainObject(target) {
-      return isObject(target) && !isArray(target) ? true : false;
-    }
-
-    function isObject(target) {
-      return typeof target === 'object';
-    }
-
-    function isArray(target) {
-      var stringTarget = Object.prototype.toString.call(target);
-      return stringTarget.slice(8, stringTarget.length - 1).toLowerCase() === 'array';
-    }
-
-    function isFunc(target) {
-      return typeof target === 'function';
-    }
-
-    function isString(target) {
-      return typeof target === 'string';
-    }
-
-    function error(message) {
-      throw new Error(message);
+    if (afterUpdate) {
+      mapSubscribers(subscribers['*']);
     }
   }
 
-  return SpawnCreator;
-})();
+  function autorun(subscribers, cb) {
+    var key;
+
+    for (key in subscribers) {
+      if (subscribers.hasOwnProperty(key)) {
+        cb(key);
+        mapSubscribers(subscribers[key]);
+        mapSubscribers(subscribers['*']);
+      }
+    }
+  }
+
+  function mapSubscribers(subscribers) {
+    var i;
+
+    for (i = 0; i < subscribers.length; i++) {
+      subscribers[i]();
+    }
+  }
+
+  function checkCallback(subscribers, callback) {
+    var i;
+
+    for (i = 0; i < subscribers.length; i++) {
+      if (subscribers[i] === callback) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  function clone(target) {
+    return JSON.parse(JSON.stringify(target));
+  }
+
+  function isPlainObject(target) {
+    return isObject(target) && !isArray(target) ? true : false;
+  }
+
+  function isObject(target) {
+    return typeof target === 'object';
+  }
+
+  function isArray(target) {
+    var stringTarget = Object.prototype.toString.call(target);
+    return stringTarget.slice(8, stringTarget.length - 1).toLowerCase() === 'array';
+  }
+
+  function isFunc(target) {
+    return typeof target === 'function';
+  }
+
+  function isString(target) {
+    return typeof target === 'string';
+  }
+
+  function error(message) {
+    throw new Error(message);
+  }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = Spawn;
+}

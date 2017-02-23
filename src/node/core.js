@@ -10,7 +10,7 @@ function mapSubscribers(subscribers) {
 
 function checkCallback(subscribers, cb) {
   subscribers.forEach(item => {
-    if (item[i] === cb) return false;
+    if (item === cb) return false;
   });
 
   return true;
@@ -18,7 +18,7 @@ function checkCallback(subscribers, cb) {
 
 function findZoneValue(zone, state) {
   let zoneParts = zone.split('.'),
-    parent = clone(state);
+      parent = clone(state);
 
   for (let i = 0; i < zoneParts.length; i++) {
     if (!parent.hasOwnProperty(zoneParts[i])) {

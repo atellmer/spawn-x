@@ -16,7 +16,7 @@ bower install spawn.js --save
 <script src="path/to/spawn.js/src/browser/spawn.min.js"></script>
 ```
 ```javascript
-var spawn$ = new Spawn();
+var spawn$ = new Spawn({});
 ```
 With npm:
 ```
@@ -24,10 +24,10 @@ npm install spawn-x --save
 ```
 ```javascript
 const Spawn = require('spawn-x');
-const spawn$ = new Spawn();
+const spawn$ = new Spawn({});
 ```
 ## API:
-Spawn object after init will be a singleton and he will only have 4 methods:
+Spawn object after init will only have 4 methods:
 
 select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. If zone will be equal '->', this method returns lastest updated zone name. if zone will be a function, method puts the app state in the function argument and apply it.
 ```javascript
@@ -96,7 +96,7 @@ Note: You can subscribe on not fully matching zones, and Spawn will apply callba
 Examples:
 ```javascript
 //Example #1
-var spawn$ = new Spawn();
+var spawn$ = new Spawn({});
 
 function callback() {
     var admin = spawn$.select(function(state) { return state.users.admins[0].name });

@@ -1,11 +1,16 @@
 {
   "name": "spawn-x",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "lib for management of Application state",
   "author": "AlexPlex",
   "license": "MIT",
   "main": "src/node/index.js",
   "homepage": "https://github.com/atellmer/spawn.js",
+  "scripts": {
+    "test": "tape test/index.js",
+    "precommit": "npm test",
+    "prepush": "npm test"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/atellmer/spawn.js.git"
@@ -25,5 +30,9 @@
     "angular",
     "angularjs",
     "@angular"
-  ]
+  ],
+  "devDependencies": {
+    "husky": "^0.13.1",
+    "tape": "^4.6.3"
+  }
 }
