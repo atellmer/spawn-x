@@ -190,7 +190,7 @@ function TodoApp(spawn$) {
 
 TodoApp.logger = function(spawn$) {
   spawn$.detect('*', function() {
-    if (/@ACTIONS/.test(spawn$.select('->'))) {
+    if (/@/.test(spawn$.select('->'))) {
       console.log('logger: ', spawn$.select('->') + ' -> ', spawn$.select('*'));
     }
   });
@@ -226,6 +226,7 @@ app.removeTask(1);
 /*
 console output:
 
+logger:  @@SPAWN/INIT -> ...
 -----
 All todos:  1
 Completed todos: 1

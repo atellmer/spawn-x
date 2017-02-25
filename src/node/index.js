@@ -1,6 +1,7 @@
 'use strict';
 
 const {
+  SPAWN_INIT,
   clone,
   mapSubscribers,
   checkCallback,
@@ -22,7 +23,7 @@ const Spawn = function () {
       prevState = {},
       virtualState = {},
       subscribers = { '*': [] },
-      lastZone = '@@SPAWN/INIT';
+      lastZone = SPAWN_INIT;
 
   if (arguments[0]) {
     if (!isPlainObject(arguments[0])) error('Spawn: the initial state must be plain object!');
@@ -35,16 +36,9 @@ const Spawn = function () {
   this.select = (selector) => {
     if (isString(selector)) {
       switch (selector) {
-      case '*':
-        {
-          return clone(state);
-        }
-      case '->':
-        {
-          return lastZone;
-        }
-      default:
-        return findZoneValue(selector, state);
+      case '*': return clone(state);
+      case '->': return lastZone;
+      default: return findZoneValue(selector, state);
       }
     }
     if (isFunc(selector)) return selector(clone(state));
@@ -62,6 +56,7 @@ const Spawn = function () {
 
     if (zone === '*' && checkCallback(subscribers[zone], callback)) {
       subscribers[zone].push(callback);
+      mapSubscribers(subscribers[zone]);
 
       return this;
     }
@@ -93,6 +88,7 @@ const Spawn = function () {
         state = clone(data);
         prevState = {};
         virtualState = {};
+        lastZone = zone;
         autorun(subscribers, (key) => lastZone = key);
 
         return this;

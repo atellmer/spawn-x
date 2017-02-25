@@ -1,5 +1,7 @@
 'use strict';
 
+const SPAWN_INIT = '@@SPAWN/INIT';
+
 function clone(target) {
   return JSON.parse(JSON.stringify(target));
 }
@@ -37,9 +39,8 @@ function plainZoneValue(zone, state) {
 function autorun(subscribers, cb) {
   for (let key in subscribers) {
     if (subscribers.hasOwnProperty(key)) {
-      cb(key);
+      if (key !== '*') cb(key);
       mapSubscribers(subscribers[key]);
-      mapSubscribers(subscribers['*']);
     }
   }
 }
@@ -69,6 +70,7 @@ function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
 }
 
 module.exports = {
+  SPAWN_INIT,
   clone,
   mapSubscribers,
   checkCallback,

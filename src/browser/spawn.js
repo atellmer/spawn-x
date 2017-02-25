@@ -5,7 +5,8 @@ var Spawn = function () {
       prevState = {},
       virtualState = {},
       subscribers = { '*': [] },
-      lastZone = '@@SPAWN/INIT',
+      SPAWN_INIT = '@@SPAWN/INIT',
+      lastZone = SPAWN_INIT,
       instance = this;
 
   if (arguments[0]) {
@@ -25,16 +26,9 @@ var Spawn = function () {
   instance.select = function (selector) {
     if (isString(selector)) {
       switch (selector) {
-      case '*':
-        {
-          return clone(state);
-        }
-      case '->':
-        {
-          return lastZone;
-        }
-      default:
-        return findZoneValue(selector, state);
+      case '*': return clone(state);
+      case '->': return lastZone;
+      default: return findZoneValue(selector, state);
       }
     }
     if (isFunc(selector)) {
@@ -54,6 +48,7 @@ var Spawn = function () {
 
     if (zone === '*' && checkCallback(subscribers[zone], callback)) {
       subscribers[zone].push(callback);
+      mapSubscribers(subscribers[zone]);
 
       return instance;
     }
@@ -86,6 +81,7 @@ var Spawn = function () {
         state = clone(data);
         prevState = {};
         virtualState = {};
+        lastZone = zone;
         autorun(subscribers, function(key) {
           lastZone = key;
         });
@@ -172,9 +168,8 @@ var Spawn = function () {
 
     for (key in subscribers) {
       if (subscribers.hasOwnProperty(key)) {
-        cb(key);
+        if (key !== '*') cb(key);
         mapSubscribers(subscribers[key]);
-        mapSubscribers(subscribers['*']);
       }
     }
   }

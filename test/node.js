@@ -74,6 +74,22 @@ test(`NODE: Generate zone`, (t) => {
   t.deepEqual(actual, spawn$.select('*'));
 });
 
+test(`NODE: return null if zone not exist`, (t) => {
+  t.plan(1);
+
+  const spawn$ = new Spawn({});
+
+  t.equal(null, spawn$.select('some.zone'));
+});
+
+test(`NODE: return constant when init`, (t) => {
+  t.plan(1);
+
+  const spawn$ = new Spawn({});
+
+  t.equal('@@SPAWN/INIT', spawn$.select('->'));
+});
+
 test(`NODE: [Update] state with update('*')`, (t) => {
   t.plan(1);
 
@@ -279,7 +295,7 @@ test(`NODE: [Select] state with select(() => {})`, (t) => {
 
 
 test(`NODE: [Detect] state with detect('*')`, (t) => {
-  t.plan(2);
+  t.plan(3);
 
   let expected = 0;
 
@@ -288,12 +304,13 @@ test(`NODE: [Detect] state with detect('*')`, (t) => {
   spawn$.detect('*', function () {
     expected++;
   });
-
-  spawn$.update('parent', {});
   t.equal(1, expected);
 
-  spawn$.update('parent.child', 'Hello world');
+  spawn$.update('parent', {});
   t.equal(2, expected);
+
+  spawn$.update('parent.child', 'Hello world');
+  t.equal(3, expected);
 });
 
 test(`NODE: [Detect] state with detect('zone')`, (t) => {
