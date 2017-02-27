@@ -1,5 +1,3 @@
-'use strict';
-
 function isPlainObject(target) {
   return isObject(target) && !isArray(target) ? true : false;
 }
@@ -24,7 +22,7 @@ function error(message) {
   throw new Error(message);
 }
 
-module.exports = {
+export {
   isPlainObject,
   isObject,
   isArray,

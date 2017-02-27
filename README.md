@@ -1,7 +1,7 @@
-# Spawn.js
-### Management of Application state... 
+# Spawn
+### App state management 
 
-![Spaun.js](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
+![Spawn](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
 
 ## About
 Spawn is a simple and super small library without dependencies for management of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object.
@@ -13,21 +13,22 @@ With bower:
 bower install spawn.js --save
 ```
 ```html
-<script src="path/to/spawn.js/src/browser/spawn.min.js"></script>
+<script src="path/to/spawn.js/lib/spawn.umd.min.js"></script>
 ```
 ```javascript
-var spawn$ = new Spawn({});
+var store = Spawn.createStore();
 ```
 With npm:
 ```
 npm install spawn-x --save
 ```
 ```javascript
-const Spawn = require('spawn-x');
-const spawn$ = new Spawn({});
+import { createStore } from 'spawn-x';
+
+const store = createStore();
 ```
 ## API:
-Spawn object after init will only have 4 methods:
+Spawn object (store) after init will only have 4 methods:
 
 select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. If zone will be equal '->', this method returns lastest updated zone name. if zone will be a function, method puts the app state in the function argument and apply it.
 ```javascript
@@ -36,11 +37,11 @@ select(zone: string | function): any
 ```
 ```javascript
 // Examples:
-spawn$.select('roles.admins');
-spawn$.select('*'); // full app state
-spawn$.select('->'); // latest updated zone name, for example 'roles.admins'
-spawn$.select(function (state) { return state.roles.admins[2] }); // ES5
-spawn$.select(state => state.roles.admins[2]); // ES2015
+store.select('roles.admins');
+store.select('*'); // full app state
+store.select('->'); // latest updated zone name, for example 'roles.admins'
+store.select(function (state) { return state.roles.admins[2] }); // ES5
+store.select(state => state.roles.admins[2]); // ES2015
 ```
 
 detect() method makes subscribe for data zone change and apply callback if zone updated. If zone will be equal '*', this method makes subscribe for all changes. Returns instance object for chaining. 
@@ -51,10 +52,10 @@ detect(zone: string, callback: function): instance
 ```
 ```javascript
 // Examples:
-spawn$.detect('roles.admins', function() {
-  var admins = spawn$.select('roles.admins');
+store.detect('roles.admins', function() {
+  var admins = store.select('roles.admins');
 });
-spawn$.detect('*', function() {
+store.detect('*', function() {
   console.log('something happened!');
 });
 ```
@@ -71,10 +72,10 @@ var admins = [
 { id: 1, name: 'Alex Smith' },
 { id: 2, name: 'Kate Jensen' },
 ];
-spawn$.update('roles.admins', admins);
+store.update('roles.admins', admins);
 
 var oldState = JSON.parse(localStorage.getItem('APP_STATE_1'));
-spawn$.update('*', oldState);
+store.update('*', oldState);
 ```
 
 getState() method returns app state similar select('*')
@@ -84,7 +85,7 @@ getState(): any
 ```
 ```javascript
 // Examples:
-var appState = spawn$.getState();
+var appState = store.getState();
 ```
 
 Note: Spawn in the initialization process might accept plain object as initial app state.
@@ -96,18 +97,18 @@ Note: You can subscribe on not fully matching zones, and Spawn will apply callba
 Examples:
 ```javascript
 //Example #1
-var spawn$ = new Spawn({});
+const store = Spawn.createStore();
 
 function callback() {
-    var admin = spawn$.select(function(state) { return state.users.admins[0].name });
+    const admin = store.select(state => state.users.admins[0].name);
     console.log('admin name: ', admin);
 }
 
 //subscribe
-spawn$.detect('users.admins', callback);
+store.detect('users.admins', callback);
 
 //update
-spawn$.update('users', {
+store.update('users', {
   admins: [
     { id: 0, name: 'John' },
     { id: 1, name: 'Alex' }
@@ -115,8 +116,8 @@ spawn$.update('users', {
 });
 //console output: 'admin name: John'
 
-setTimeout(function() {
-  spawn$.update('users', {
+setTimeout(() => {
+  store.update('users', {
     admins: [
       { id: 0, name: 'Jess' },
       { id: 1, name: 'Alex' }
@@ -128,54 +129,33 @@ setTimeout(function() {
 ```
 ```javascript
 //Example #2 (Simple app)
-var initialState = {
-  todos: []
-},
-spawn$ = new Spawn(initialState);
+import { createStore } from 'spawn-x';
 
-function TodoApp(spawn$) {
-  spawn$.detect('todos', combineActions);
 
-  function combineActions() {
-    var todos = spawn$.select('todos');
-
-    if (todos.length > 0) {
-      console.log('-----');
-      console.log('All todos: ', reportAction(todos));
-      console.log('Completed todos:', getCountCompletedAction(todos));
-    }
+class TodoApp {
+  constructor(store) {
+    this.store = store;
+    this.store.detect('todos', () => combineActions(this.store.select('todos')));
   }
 
-  function reportAction(todos) {
-    return todos.length;
+  addTask(task) {
+    this.store.update('todos', this.store.select('todos').concat(task));
+    this.store.update('@ACTIONS.ADD_TASK', new Date().getTime());
   }
 
-  function getCountCompletedAction(todos) {
-    return todos.filter(function(todo) {
-      return todo.complete === true;
-    }).length;
-  }
-
-  this.addTask = function (task) {
-    spawn$.update('todos', spawn$.select('todos').concat(task));
-    spawn$.update('@ACTIONS.ADD_TASK', new Date());
-  }
-
-  this.removeTask = function (id) {
-    var filteredTasks = spawn$
+  removeTask(id) {
+    const filteredTasks = this.store
       .select('todos')
-      .filter(function(task) {
-        return task.id !== id;
-      });
+      .filter(task => task.id !== id);
 
-    spawn$.update('todos', filteredTasks);
-    spawn$.update('@ACTIONS.REMOVE_TASK', new Date());
+    this.store.update('todos', filteredTasks);
+    this.store.update('@ACTIONS.REMOVE_TASK', new Date().getTime());
   }
 
-  this.completeTask = function (id, complete) {
-    var updatedTasks = spawn$
+  completeTask(id, complete) {
+    const updatedTasks = this.store
       .select('todos')
-      .map(function(task) {
+      .map(task => {
         if (task.id === id) {
           task.complete = complete;
         }
@@ -183,23 +163,43 @@ function TodoApp(spawn$) {
         return task;
       });
 
-    spawn$.update('todos', updatedTasks);
-    spawn$.update('@ACTIONS.CHANGE_COMPLETE', new Date());
+    this.store.update('todos', updatedTasks);
+    this.store.update('@ACTIONS.CHANGE_COMPLETE', new Date().getTime());
   }
 }
 
-TodoApp.logger = function(spawn$) {
-  spawn$.detect('*', function() {
-    if (/@/.test(spawn$.select('->'))) {
-      console.log('logger: ', spawn$.select('->') + ' -> ', spawn$.select('*'));
+function combineActions(todos) {
+  if (todos.length > 0) {
+    console.log('-----');
+    console.log('All todos: ', reportAction(todos));
+    console.log('Completed todos:', getCountCompletedAction(todos));
+  }
+}
+
+function reportAction (todos) {
+  return todos.length;
+}
+
+function getCountCompletedAction(todos) {
+  return todos.filter(todo => todo.complete === true).length;
+}
+
+function logger(store) {
+  store.detect('*', () => {
+    if (/@/.test(store.select('->'))) {
+      console.log('logger: ', store.select('->') + ' -> ', store.select('*'));
     }
   });
 }
 
-
 ///////////////////////////
-var app = new TodoApp(spawn$);
-TodoApp.logger(spawn$);
+const initialState = {
+  todos: []
+};
+const store = createStore(initialState);
+logger(store);
+
+const app = new TodoApp(store);
 
 app.addTask({
   id: 0,

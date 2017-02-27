@@ -1,6 +1,4 @@
-'use strict';
-
-const {
+import {
   SPAWN_INIT,
   clone,
   mapSubscribers,
@@ -9,13 +7,13 @@ const {
   plainZoneValue,
   autorun,
   applyLogic
-} = require('./core');
-const {
+} from './core';
+import {
   isPlainObject,
   isFunc,
   isString,
   error
-} = require('./helpers');
+} from './helpers';
 
 
 const Spawn = function () {
@@ -124,4 +122,9 @@ const Spawn = function () {
   }
 }
 
-module.exports = Spawn;
+export function createStore() {
+  if (arguments[0]) {
+    return new Spawn(arguments[0]);
+  }
+  return new Spawn();
+}

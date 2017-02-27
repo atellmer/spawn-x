@@ -1,5 +1,3 @@
-'use strict';
-
 const SPAWN_INIT = '@@SPAWN/INIT';
 
 function clone(target) {
@@ -69,7 +67,7 @@ function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
   }
 }
 
-module.exports = {
+export {
   SPAWN_INIT,
   clone,
   mapSubscribers,

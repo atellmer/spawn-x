@@ -1,12 +1,16 @@
 {
   "name": "spawn-x",
-  "version": "0.6.7",
+  "version": "1.0.0",
   "description": "lib for management of Application state",
   "author": "AlexPlex",
   "license": "MIT",
-  "main": "src/node/index.js",
+  "main": "./lib/spawn.umd.js",
   "homepage": "https://github.com/atellmer/spawn.js",
   "scripts": {
+    "build": "npm run build:dev && npm run build:prod",
+    "build:dev": "webpack",
+    "build:prod": "set WEBPACK_ENV=build:prod&& webpack",
+    "dev": "set WEBPACK_ENV=dev&& webpack --watch",
     "test": "tape test/index.js",
     "precommit": "npm test",
     "prepush": "npm test"
@@ -32,7 +36,13 @@
     "@angular"
   ],
   "devDependencies": {
+    "babel-core": "^6.23.1",
+    "babel-loader": "^6.3.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-es2015": "^6.22.0",
+    "babel-preset-stage-0": "^6.22.0",
     "husky": "^0.13.1",
-    "tape": "^4.6.3"
+    "tape": "^4.6.3",
+    "webpack": "2.2.0"
   }
 }
