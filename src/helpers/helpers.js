@@ -18,6 +18,16 @@ function isString(target) {
   return typeof target === 'string';
 }
 
+function hasKey(target, key) {
+  for (let ownKey in target) {
+    if (target.hasOwnProperty(ownKey)) {
+      if (ownKey === key) return true;
+    }
+  }
+
+  return false;
+}
+
 function error(message) {
   throw new Error(message);
 }
@@ -28,5 +38,6 @@ export {
   isArray,
   isFunc,
   isString,
+  hasKey,
   error
 }

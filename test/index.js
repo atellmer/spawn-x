@@ -1,7 +1,56 @@
 'use strict';
 
 const test = require('tape');
-const { createStore } = require('../lib/spawn.umd');
+const { createStore, addInterceptor } = require('../lib/spawn.umd');
+
+
+test(`addInterceptor don't trows exeption`, (t) => {
+  t.doesNotThrow(() => {
+    addInterceptor();
+  });
+  t.end();
+});
+
+test(`addInterceptor don't trows exeption when passes a functions`, (t) => {
+  t.doesNotThrow(() => {
+    addInterceptor(
+      () => { },
+      () => { },
+      () => { }
+    );
+  });
+  t.end();
+});
+
+test(`addInterceptor trows exeption when passes not a functions`, (t) => {
+  t.throws(() => {
+    addInterceptor(
+      () => { },
+      () => { },
+      true
+    );
+  });
+  t.end();
+});
+
+test(`addInterceptor return array of functions`, (t) => {
+  const fn = () => { };
+
+  const expected = [
+    fn,
+    fn,
+    fn,
+  ];
+
+  const actual = addInterceptor(
+    fn,
+    fn,
+    fn
+  );
+
+  t.deepEqual(actual, expected);
+  t.end();
+});
 
 test(`createStore don't trows exeption`, (t) => {
   t.doesNotThrow(() => {
@@ -10,46 +59,185 @@ test(`createStore don't trows exeption`, (t) => {
   t.end();
 });
 
-test(`createStore with initial state don't trows exeption`, (t) => {
+test(`createStore don't trows exeption without arguments`, (t) => {
+  t.doesNotThrow(() => {
+    createStore();
+  });
+  t.end();
+});
+
+test(`createStore don't trows exeption with one argument as plain object`, (t) => {
   t.doesNotThrow(() => {
     createStore({});
   });
   t.end();
 });
 
-test(`type of store is object`, (t) => {
-  t.plan(1);
+test(`createStore don't trows exeption with one argument as addInterceptor function`, (t) => {
+  t.doesNotThrow(() => {
+    createStore(addInterceptor(() => { }));
+  });
+  t.end();
+});
 
+test(`createStore don't trows exeption with two arguments as plain object and addInterceptor function`, (t) => {
+  t.doesNotThrow(() => {
+    createStore({}, addInterceptor(() => { }));
+  });
+  t.end();
+});
+
+test(`createStore trows exeption with one argument as not plain object or not addInterceptor function`, (t) => {
+  t.throws(() => {
+    createStore(true);
+  });
+  t.end();
+});
+
+test(`createStore trows exeption with two arguments as not plain object and addInterceptor function`, (t) => {
+  t.throws(() => {
+    createStore([], addInterceptor(() => { }));
+  });
+  t.end();
+});
+
+test(`createStore trows exeption with two arguments as plain object and not addInterceptor function`, (t) => {
+  t.throws(() => {
+    createStore({}, {});
+  });
+  t.end();
+});
+
+test(`type of store is object`, (t) => {
   const store = createStore();
 
   t.equal(typeof store, 'object');
+  t.end();
 });
 
 test(`store has method`, (t) => {
   const store = createStore();
 
   t.doesNotThrow(() => {
-    store.getState();
-  }, `getState()`);
-
-  t.doesNotThrow(() => {
     store.select('*');
   }, `select()`);
 
   t.doesNotThrow(() => {
-    store.detect('*', () => {});
+    store.detect('*', () => { });
   }, `detect()`);
 
   t.doesNotThrow(() => {
-    store.update('*', {});
+    store.update('*', { data: {}, type: 'TEST_TYPE' });
   }, `update()`);
 
   t.end();
 });
 
-test(`Pass initial state`, (t) => {
-  t.plan(1);
+test(`addInterceptor with one interceptor right updated state`, (t) => {
+  const interceptor = store => next => action => next(action);
 
+  const store = createStore(
+    {},
+    addInterceptor(interceptor)
+  );
+
+  const action = {
+    data: { name: 'Alex' },
+    type: 'ADD_USER'
+  };
+
+  store.update('users', action);
+
+  t.deepEqual(action.data, store.select('users'));
+
+  t.end();
+});
+
+test(`addInterceptor with two interceptor right updated state`, (t) => {
+  const interceptorOne = store => next => action => {
+    next(action);
+  }
+
+  const interceptorTwo = store => next => action => {
+    next(action);
+  }
+
+  const store = createStore(
+    {},
+    addInterceptor(interceptorOne, interceptorTwo)
+  );
+
+  const action = {
+    data: { name: 'Alex' },
+    type: 'ADD_USER'
+  };
+
+  store.update('users', action);
+
+  t.deepEqual(action.data, store.select('users'));
+
+  t.end();
+});
+
+test(`addInterceptor with modified action`, (t) => {
+  const interceptorOne = store => next => action => {
+    action.data.name = 'John';
+    next(action);
+  }
+
+  const interceptorTwo = store => next => action => {
+    next(action);
+  }
+
+  const store = createStore(
+    {},
+    addInterceptor(interceptorOne, interceptorTwo)
+  );
+
+  const action = {
+    data: { name: 'Alex' },
+    type: 'ADD_USER'
+  };
+
+  store.update('users', action);
+
+  t.equal('John', store.select('users.name'));
+
+  t.end();
+});
+
+test(`addInterceptor with cancelable action`, (t) => {
+  const interceptorOne = store => next => action => {
+    if (!action.data.cancelable) {
+      next(action);
+    }
+  }
+
+  const interceptorTwo = store => next => action => {
+    next(action);
+  }
+
+  const store = createStore(
+    {},
+    addInterceptor(interceptorOne, interceptorTwo)
+  );
+
+  const action = {
+    data: {
+      name: 'Alex',
+      cancelable: true
+    },
+    type: 'ADD_USER'
+  };
+
+  store.update('users', action);
+
+  t.equal(null, store.select('users'));
+
+  t.end();
+});
+
+test(`Pass initial state`, (t) => {
   const initilState = {
     users: [{
       name: 'Alex',
@@ -60,12 +248,12 @@ test(`Pass initial state`, (t) => {
 
   const store = createStore(initilState);
 
-  t.deepEqual(initilState, store.getState());
+  t.deepEqual(initilState, store.select('*'));
+
+  t.end();
 });
 
 test(`Generate zone`, (t) => {
-  t.plan(1);
-
   const actual = {
     grandpa: {
       parent: {
@@ -76,30 +264,35 @@ test(`Generate zone`, (t) => {
 
   const store = createStore();
 
-  store.update('grandpa.parent.child', 'Hello');
+  store.update('grandpa.parent.child', { data: 'Hello', type: 'TEST_TYPE' });
 
   t.deepEqual(actual, store.select('*'));
+
+  t.end();
 });
 
 test(`return null if zone not exist`, (t) => {
-  t.plan(1);
-
   const store = createStore();
 
   t.equal(null, store.select('some.zone'));
+
+  t.end();
 });
 
-test(`return constant when init`, (t) => {
-  t.plan(1);
-
+test(`return last action when init`, (t) => {
   const store = createStore();
 
-  t.equal('@@SPAWN/INIT', store.select('->'));
+  const action = {
+    data: {},
+    type: '@@SPAWN/INIT'
+  }
+
+  t.deepEqual(action, store.select('=>'));
+
+  t.end();
 });
 
 test(`[Update] state with update('*')`, (t) => {
-  t.plan(1);
-
   const initilState = {
     users: [{
       name: 'Alex',
@@ -111,25 +304,25 @@ test(`[Update] state with update('*')`, (t) => {
 
   const actualState = {
     users: [{
-        name: 'Alex',
-        age: 28
-      },
-      {
-        name: 'July',
-        age: 27
-      }
+      name: 'Alex',
+      age: 28
+    },
+    {
+      name: 'July',
+      age: 27
+    }
     ],
     tasks: []
   };
 
-  store.update('*', actualState);
+  store.update('*', { data: actualState, type: 'LOAD_INIT_DATA' });
 
   t.deepEqual(actualState, store.select('*'));
+
+  t.end();
 });
 
 test(`[Update] state with update('zone')`, (t) => {
-  t.plan(1);
-
   const initilState = {
     users: [{
       name: 'Alex',
@@ -140,16 +333,16 @@ test(`[Update] state with update('zone')`, (t) => {
   const store = createStore(initilState);
 
   const users = [{
-      name: 'Alex',
-      age: 28
-    },
-    {
-      name: 'July',
-      age: 27
-    }
+    name: 'Alex',
+    age: 28
+  },
+  {
+    name: 'July',
+    age: 27
+  }
   ];
 
-  store.update('users', users);
+  store.update('users', { data: users, type: 'UPDATE_USERS' });
 
   const actualState = {
     users: users,
@@ -157,11 +350,11 @@ test(`[Update] state with update('zone')`, (t) => {
   };
 
   t.deepEqual(actualState, store.select('*'));
+
+  t.end();
 });
 
 test(`[Update] state with update('parent.child')`, (t) => {
-  t.plan(1);
-
   const initilState = {
     parent: {
       child: 'Hello'
@@ -169,57 +362,17 @@ test(`[Update] state with update('parent.child')`, (t) => {
   };
   const store = createStore(initilState);
 
-  store.update('parent.child', 'Hello world');
+  store.update('parent.child', { data: 'Hello world', type: 'TEST_TYPE' });
 
   t.equal('Hello world', store.select('parent.child'));
+
+  t.end();
 });
 
 test(`[Select] state with select('*')`, (t) => {
-  t.plan(1);
-
   const initilState = {
     users: {
       admins: [{
-          name: 'Alex',
-          age: 28
-        },
-        {
-          name: 'July',
-          age: 27
-        }
-      ],
-      others: [{
-        name: 'Paul',
-        age: 26
-      }, ]
-    },
-    tasks: []
-  };
-  const store = createStore(initilState);
-
-  t.deepEqual(initilState, store.select('*'));
-});
-
-test(`[Select] state with select('->')`, (t) => {
-  t.plan(3);
-
-  const store = createStore();
-
-  store.update('users', {});
-  t.equal('users', store.select('->'));
-
-  store.update('users.admins', {});
-  t.equal('users.admins', store.select('->'));
-
-  store.update('others', {});
-  t.equal('others', store.select('->'));
-});
-
-test(`[Select] state with select('zone')`, (t) => {
-  t.plan(1);
-
-  const users = {
-    admins: [{
         name: 'Alex',
         age: 28
       },
@@ -227,11 +380,48 @@ test(`[Select] state with select('zone')`, (t) => {
         name: 'July',
         age: 27
       }
+      ],
+      others: [{
+        name: 'Paul',
+        age: 26
+      },]
+    },
+    tasks: []
+  };
+  const store = createStore(initilState);
+
+  t.deepEqual(initilState, store.select('*'));
+
+  t.end();
+});
+
+test(`[Select] state with select('=>')`, (t) => {
+  const store = createStore();
+
+  store.update('users', { data: {}, type: 'UPADATE_USERS' });
+  t.equal('UPADATE_USERS', store.select('=>').type);
+
+  store.update('users.admins', { data: {}, type: 'UPADATE_ADMINS' });
+  t.equal('UPADATE_ADMINS', store.select('=>').type);
+
+  t.end();
+});
+
+test(`[Select] state with select('zone')`, (t) => {
+  const users = {
+    admins: [{
+      name: 'Alex',
+      age: 28
+    },
+    {
+      name: 'July',
+      age: 27
+    }
     ],
     others: [{
       name: 'Paul',
       age: 26
-    }, ]
+    },]
   };
 
   const initilState = {
@@ -241,20 +431,19 @@ test(`[Select] state with select('zone')`, (t) => {
   const store = createStore(initilState);
 
   t.deepEqual(users, store.select('users'));
+
+  t.end();
 });
 
-
 test(`[Select] state with select('parent.child')`, (t) => {
-  t.plan(1);
-
   const admins = [{
-      name: 'Alex',
-      age: 28
-    },
-    {
-      name: 'July',
-      age: 27
-    }
+    name: 'Alex',
+    age: 28
+  },
+  {
+    name: 'July',
+    age: 27
+  }
   ];
 
   const users = {
@@ -262,7 +451,7 @@ test(`[Select] state with select('parent.child')`, (t) => {
     others: [{
       name: 'Paul',
       age: 26
-    }, ]
+    },]
   };
 
   const initilState = {
@@ -272,56 +461,55 @@ test(`[Select] state with select('parent.child')`, (t) => {
   const store = createStore(initilState);
 
   t.deepEqual(admins, store.select('users.admins'));
+
+  t.end();
 });
 
 test(`[Select] state with select(() => {})`, (t) => {
-  t.plan(1);
-
   const initilState = {
     users: {
       admins: [{
-          name: 'Alex',
-          age: 28
-        },
-        {
-          name: 'July',
-          age: 27
-        }
+        name: 'Alex',
+        age: 28
+      },
+      {
+        name: 'July',
+        age: 27
+      }
       ],
       others: [{
         name: 'Paul',
         age: 26
-      }, ]
+      },]
     },
     tasks: []
   };
   const store = createStore(initilState);
 
   t.equal('Alex', store.select((state) => state.users.admins[0].name));
+
+  t.end();
 });
 
 test(`[Detect] state with detect('*')`, (t) => {
-  t.plan(3);
-
   let expected = 0;
 
   const store = createStore();
 
-  store.detect('*', function () {
-    expected++;
-  });
+  store.detect('*', () => expected++);
+
   t.equal(1, expected);
 
-  store.update('parent', {});
+  store.update('parent', { data: {}, type: 'TEST_TYPE' });
   t.equal(2, expected);
 
-  store.update('parent.child', 'Hello world');
+  store.update('parent.child', { data: 'Hello World', type: 'TEST_TYPE' });
   t.equal(3, expected);
+
+  t.end();
 });
 
 test(`[Detect] state with detect('zone')`, (t) => {
-  t.plan(1);
-
   let len;
 
   const initilState = {
@@ -340,12 +528,13 @@ test(`[Detect] state with detect('zone')`, (t) => {
     name: 'task #1'
   });
 
-  store.update('tasks', tasks);
+  store.update('tasks', { data: tasks, type: 'UPDATE_TASKS' });
   t.equal(1, len, `with detect('zone')`);
+
+  t.end();
 });
 
 test(`[Detect] state with detect('parent.child')`, (t) => {
-  t.plan(2);
 
   let expected;
 
@@ -361,14 +550,13 @@ test(`[Detect] state with detect('parent.child')`, (t) => {
   });
   t.equal('Hello', expected);
 
-  store.update('parent.child', 'Hello world');
+  store.update('parent.child', { data: 'Hello world', type: 'SOME_UPDATE' });
   t.equal('Hello world', expected);
+
+  t.end();
 });
 
-
 test(`Async update`, (t) => {
-  t.plan(2);
-
   let expected;
 
   const store = createStore();
@@ -379,36 +567,47 @@ test(`Async update`, (t) => {
 
   store.detect('users.admins', callback);
 
-  store.update('users', {
-    admins: [{
-        id: 0,
-        name: 'John'
-      },
-      {
-        id: 1,
-        name: 'Alex'
-      }
-    ]
-  });
-  t.equal('John', expected);
-
-  setTimeout(() => {
-    store.update('users', {
-      admins: [{
+  store.update('users',
+    {
+      data: {
+        admins: [{
           id: 0,
-          name: 'Jess'
+          name: 'John'
         },
         {
           id: 1,
           name: 'Alex'
         }
-      ]
-    });
+        ]
+      },
+      type: 'UPDATE_USERS'
+    }
+  );
+  t.equal('John', expected);
+
+  setTimeout(() => {
+    store.update('users',
+      {
+        data: {
+          admins: [{
+            id: 0,
+            name: 'Jess'
+          },
+          {
+            id: 1,
+            name: 'Alex'
+          }
+          ]
+        },
+        type: 'UPDATE_USERS'
+      }
+    );
 
     t.equal('Jess', expected);
   }, 2000);
-});
 
+  t.end();
+});
 
 test(`Not apply callbacks if data not modified`, (t) => {
   let expected, count = 0;
@@ -421,20 +620,27 @@ test(`Not apply callbacks if data not modified`, (t) => {
   });
 
   store.update('users', {
-    admin: {
-        id: 0,
-        name: 'John'
-      }
-  });
+      data: {
+        admin: {
+          id: 0,
+          name: 'John'
+        }
+      },
+      type: 'UPDATE_USERS'
+    }
+  );
   t.equal('John', expected);
   t.equal(1, count);
 
   setTimeout(() => {
     store.update('users', {
-      admin: {
+      data: {
+        admin: {
           id: 1000,
           name: 'John'
         }
+      },
+      type: 'UPDATE_USERS'
     });
     t.equal('John', expected);
     t.equal(1, count);
@@ -443,10 +649,13 @@ test(`Not apply callbacks if data not modified`, (t) => {
 
   setTimeout(() => {
     store.update('users', {
-      admin: {
+      data: {
+        admin: {
           id: 0,
           name: 'Jess'
         }
+      },
+      type: 'UPDATE_USERS'
     });
 
     t.equal('Jess', expected);
@@ -456,11 +665,14 @@ test(`Not apply callbacks if data not modified`, (t) => {
 
   setTimeout(() => {
     store.update('users', {
-      admin: {
+      data: {
+        admin: {
           id: 0,
           name: 'Jess',
           age: 23
         }
+      },
+      type: 'UPDATE_USERS'
     });
 
     t.equal('Jess', expected);

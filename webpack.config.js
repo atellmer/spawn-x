@@ -15,6 +15,10 @@ if (env === 'build:prod') {
 }
 
 const config = {
+  resolve: {
+    modules: ['node_modules'],
+    extensions: ['.js']
+  },
   entry: path.resolve(__dirname, 'src/index.js'),
   output: {
     path: path.resolve(__dirname, 'lib'),

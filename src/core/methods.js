@@ -1,11 +1,9 @@
-const SPAWN_INIT = '@@SPAWN/INIT';
-
 function clone(target) {
   return JSON.parse(JSON.stringify(target));
 }
 
 function mapSubscribers(subscribers) {
-  subscribers.forEach(item => item());
+  subscribers.forEach(cb => cb());
 }
 
 function checkCallback(subscribers, cb) {
@@ -16,7 +14,7 @@ function checkCallback(subscribers, cb) {
   return true;
 }
 
-function findZoneValue(zone, state) {
+function findZoneValue (zone, state) {
   let zoneParts = zone.split('.'),
       parent = clone(state);
 
@@ -30,17 +28,23 @@ function findZoneValue(zone, state) {
   return parent;
 }
 
-function plainZoneValue(zone, state) {
+function plainZoneValue (zone, state) {
   return JSON.stringify(findZoneValue(zone, state));
 }
 
-function autorun(subscribers, cb) {
-  for (let key in subscribers) {
-    if (subscribers.hasOwnProperty(key)) {
-      if (key !== '*') cb(key);
-      mapSubscribers(subscribers[key]);
-    }
-  }
+function autorun(subscribers) {
+  Object.keys(subscribers).forEach(key => mapSubscribers(subscribers[key]));
+}
+
+function compose(...funcs) {
+  if (funcs.length === 0) return arg => arg;
+  if (funcs.length === 1) return funcs[0];
+
+  return funcs.reduce((fn1, fn2) => (...args) => fn1(fn2(...args)));
+}
+
+function applyInterceptors(store) {
+  return action => interceptors => compose(...interceptors.map(fn => fn(store)))(arg => arg)(clone(action));
 }
 
 function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
@@ -68,12 +72,13 @@ function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
 }
 
 export {
-  SPAWN_INIT,
   clone,
   mapSubscribers,
   checkCallback,
   findZoneValue,
   plainZoneValue,
   autorun,
+  compose,
+  applyInterceptors,
   applyLogic
 }
