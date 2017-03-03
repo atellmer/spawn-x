@@ -8,18 +8,18 @@ import {
 
 function createStore(...args) {
   let initialState = {},
-      middlewares = [];
+      interceptors = [];
 
   if (args.length === 1) {
      if (isPlainObject(args[0])) {
         initialState = args[0];
-        return new Spawn(initialState, middlewares);
+        return new Spawn(initialState, interceptors);
      } else {
        if (isArray(args[0])) {
-         middlewares = args[0].filter(item => isFunc(item));
-         return new Spawn(initialState, middlewares);
+         interceptors = args[0].filter(item => isFunc(item));
+         return new Spawn(initialState, interceptors);
        }
-       return error('Spawn: createStore with one argument takes only a plain object or applyMidleware function!');
+       return error('Spawn: createStore with one argument takes only a plain object or addInterceptor function!');
      }
   }
   if (args.length > 1) {
@@ -29,13 +29,13 @@ function createStore(...args) {
        return error('Spawn: createStore with two arguments takes as first argument only a plain object!');
      }
      if (isArray(args[1])) {
-        middlewares = args[1].filter(item => isFunc(item));
-        return new Spawn(initialState, middlewares);
+        interceptors = args[1].filter(item => isFunc(item));
+        return new Spawn(initialState, interceptors);
       }
-      return error('Spawn: createStore with two arguments takes as second argument only applyMidleware function!');
+      return error('Spawn: createStore with two arguments takes as second argument only addInterceptor function!');
   }
 
-  return new Spawn(initialState, middlewares);
+  return new Spawn(initialState, interceptors);
 }
 
 export {
