@@ -14,9 +14,9 @@ test(`addInterceptor don't trows exeption`, (t) => {
 test(`addInterceptor don't trows exeption when passes a functions`, (t) => {
   t.doesNotThrow(() => {
     addInterceptor(
-      () => { },
-      () => { },
-      () => { }
+      store => next => action => next(action),
+      store => next => action => next(action),
+      store => next => action => next(action)
     );
   });
   t.end();
@@ -25,8 +25,8 @@ test(`addInterceptor don't trows exeption when passes a functions`, (t) => {
 test(`addInterceptor trows exeption when passes not a functions`, (t) => {
   t.throws(() => {
     addInterceptor(
-      () => { },
-      () => { },
+      store => next => action => next(action),
+      store => next => action => next(action),
       true
     );
   });
@@ -34,7 +34,7 @@ test(`addInterceptor trows exeption when passes not a functions`, (t) => {
 });
 
 test(`addInterceptor return array of functions`, (t) => {
-  const fn = () => { };
+  const fn = store => next => action => next(action);
 
   const expected = [
     fn,
@@ -75,14 +75,14 @@ test(`createStore don't trows exeption with one argument as plain object`, (t) =
 
 test(`createStore don't trows exeption with one argument as addInterceptor function`, (t) => {
   t.doesNotThrow(() => {
-    createStore(addInterceptor(() => { }));
+    createStore(addInterceptor(store => next => action => next(action)));
   });
   t.end();
 });
 
 test(`createStore don't trows exeption with two arguments as plain object and addInterceptor function`, (t) => {
   t.doesNotThrow(() => {
-    createStore({}, addInterceptor(() => { }));
+    createStore({}, addInterceptor(store => next => action => next(action)));
   });
   t.end();
 });
@@ -96,7 +96,7 @@ test(`createStore trows exeption with one argument as not plain object or not ad
 
 test(`createStore trows exeption with two arguments as not plain object and addInterceptor function`, (t) => {
   t.throws(() => {
-    createStore([], addInterceptor(() => { }));
+    createStore([], addInterceptor(store => next => action => next(action)));
   });
   t.end();
 });
@@ -154,13 +154,8 @@ test(`addInterceptor with one interceptor right updated state`, (t) => {
 });
 
 test(`addInterceptor with two interceptor right updated state`, (t) => {
-  const interceptorOne = store => next => action => {
-    next(action);
-  }
-
-  const interceptorTwo = store => next => action => {
-    next(action);
-  }
+  const interceptorOne = store => next => action => next(action);
+  const interceptorTwo = store => next => action => next(action);
 
   const store = createStore(
     {},
@@ -279,19 +274,6 @@ test(`return null if zone not exist`, (t) => {
   t.end();
 });
 
-test(`return last action when init`, (t) => {
-  const store = createStore();
-
-  const action = {
-    data: {},
-    type: '@@SPAWN/INIT'
-  }
-
-  t.deepEqual(action, store.select('=>'));
-
-  t.end();
-});
-
 test(`[Update] state with update('*')`, (t) => {
   const initilState = {
     users: [{
@@ -391,18 +373,6 @@ test(`[Select] state with select('*')`, (t) => {
   const store = createStore(initilState);
 
   t.deepEqual(initilState, store.select('*'));
-
-  t.end();
-});
-
-test(`[Select] state with select('=>')`, (t) => {
-  const store = createStore();
-
-  store.update('users', { data: {}, type: 'UPADATE_USERS' });
-  t.equal('UPADATE_USERS', store.select('=>').type);
-
-  store.update('users.admins', { data: {}, type: 'UPADATE_ADMINS' });
-  t.equal('UPADATE_ADMINS', store.select('=>').type);
 
   t.end();
 });

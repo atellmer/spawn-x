@@ -1,4 +1,4 @@
-import { SPAWN_INIT } from './constants';
+import { INIT_ACTION } from './constants';
 import {
   clone,
   mapSubscribers,
@@ -22,14 +22,12 @@ const Spawn = function (initialState, interceptors) {
   let state = initialState,
       prevState = {},
       virtualState = {},
-      subscribers = { '*': [] },
-      lastAction = { data: {}, type: SPAWN_INIT };
+      subscribers = { '*': [] };
 
   this.select = selector => {
     if (isString(selector)) {
       switch (selector) {
       case '*': return clone(state);
-      case '=>': return clone(lastAction);
       default: return findZoneValue(selector, state);
       }
     }
@@ -70,11 +68,11 @@ const Spawn = function (initialState, interceptors) {
   this.update = (zone, action) => {
     if (!isString(zone)) return error(`Spawn: the update method takes only a string for first argument!`);
     if (!isPlainObject(action)) return error(`Spawn: action must be a plain object!`);
-    if (!hasKey(action, 'data')) return error(`Spawn: action must be has 'data' key!`);
-    if (!hasKey(action, 'type')) return error(`Spawn: action must be has 'type' key!`);
+    if (!hasKey(action, 'data')) return error(`Spawn: action must have a 'data' key!`);
+    if (!hasKey(action, 'type')) return error(`Spawn: action must have a 'type' key!`);
+    if (!(isString(action.type))) return error(`Spawn: type of action must be a string!`);
 
-    interceptors.push(update);
-    applyInterceptors(this)(action)(interceptors);
+    applyInterceptors(this)(action)(interceptors.concat(update));
 
     return this;
 
@@ -90,7 +88,6 @@ const Spawn = function (initialState, interceptors) {
             state = clone(action.data);
             prevState = {};
             virtualState = {};
-            lastAction = clone(action);
             autorun(subscribers);
 
             return this;
@@ -98,8 +95,6 @@ const Spawn = function (initialState, interceptors) {
 
           return error(`Spawn: the update method takes only a plain object for replace full state! Check your update('*') method.`);
         }
-
-        lastAction = clone(action);
 
         for (let i = 0; i < zoneParts.length; i++) {
           if (!parent.hasOwnProperty(zoneParts[i])) {
@@ -124,6 +119,8 @@ const Spawn = function (initialState, interceptors) {
       }
     }
   }
+
+  applyInterceptors(this)(INIT_ACTION)(interceptors.concat(store => next => action => next(action)));
 }
 
 export {

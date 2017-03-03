@@ -4,10 +4,19 @@
 ![Spawn](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
 
 ## About
-Spawn is a simple and super small library without dependencies for management of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object.
+Spawn is a simple and super small library without dependencies for management of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object. For optimization performance your app Spawn makes update app state but does not apply the callback for this state if current data equals previous data.
 
 
 ## install
+With npm:
+```
+npm install spawn-x --save
+```
+```javascript
+import { createStore } from 'spawn-x';
+
+const store = createStore();
+```
 With bower:
 ```
 bower install spawn.js --save
@@ -18,37 +27,68 @@ bower install spawn.js --save
 ```javascript
 var store = Spawn.createStore();
 ```
-With npm:
-```
-npm install spawn-x --save
-```
-```javascript
-import { createStore } from 'spawn-x';
 
-const store = createStore();
-```
 ## API:
-Spawn object (store) after init will only have 4 methods:
+#### Spawn exports 2 simple functions: createStore() and addInterceptor().
 
-select() method return selected zone from app state. If zone will be equal '*', this method returns full app state. If zone will be equal '->', this method returns lastest updated zone name. if zone will be a function, method puts the app state in the function argument and apply it.
+#### createStore()
+This function needed for first initialize store.
 ```javascript
 // Signature:
-select(zone: string | function): any 
+createStore(initialState?: any, addInterceptor?: func): instance
+```
+```javascript
+// Examples
+const store = createStore();
+
+// with initial state
+const initialState = {
+  hello: 'world'
+};
+const store = createStore(initialState);
+```
+
+#### addInterceptor()
+This function needed if you want to add interceptors (middlewares). For example interceptor may be as logger.
+```javascript
+addInterceptor(interceptor: func, ...): Array<interceptors>
+```
+```javascript
+// Examples
+const myLoggerInterceptor = store => next => action => {
+  console.log('action: ', action);
+  next(action);
+}
+const myOtherInterceptor = store => next => action => next(action);
+
+const store = createStore({}, addInterceptor(myLoggerInterceptor, myOtherInterceptor));
+
+//or without initialState
+const store = createStore(addInterceptor(myLoggerInterceptor, myOtherInterceptor));
+```
+
+#### Store object after initialization will only have 3 methods: select(), detect(), update()
+
+#### select()
+Method return selected zone from app state. If zone will be equal '*', this method returns full app state. if zone will be a function, method puts the app state in the function argument and apply it.
+```javascript
+// Signature:
+select(zone: string | func): any 
 ```
 ```javascript
 // Examples:
 store.select('roles.admins');
 store.select('*'); // full app state
-store.select('->'); // latest updated zone name, for example 'roles.admins'
 store.select(function (state) { return state.roles.admins[2] }); // ES5
 store.select(state => state.roles.admins[2]); // ES2015
 ```
 
-detect() method makes subscribe for data zone change and apply callback if zone updated. If zone will be equal '*', this method makes subscribe for all changes. Returns instance object for chaining. 
+#### detect()
+Method makes subscribe for data zone change and apply callback if zone updated. If zone will be equal '*', this method makes subscribe for all changes. Returns instance object. 
 
 ```javascript
 // Signature:
-detect(zone: string, callback: function): instance
+detect(zone: string, callback: func): instance
 ```
 ```javascript
 // Examples:
@@ -60,41 +100,42 @@ store.detect('*', function() {
 });
 ```
 
-update() method for updates zone. If zone will be equal '*', this method replaces app state on new state and apply all callbacks without checking. It is may be useful to implementation something like time traveling and others. Returns instance object for chaining.
+#### update()
+Method for updates zone. This method takes zone as first argument and action as second. Action must have 'data' field for your data and type. If zone will be equal '*', this method replaces app state on new state and apply all callbacks without checking. It is may be useful to implementation something like time traveling. Returns instance object.
 ```javascript
 // Signature:
-update(zone: string, data: any): instance 
+actionType {
+  data: any,
+  type: string
+}
+
+update(zone: string, action: actionType): instance
 ```
 ```javascript
 // Examples:
-var admins = [
-{ id: 0, name: 'John Doe' },
-{ id: 1, name: 'Alex Smith' },
-{ id: 2, name: 'Kate Jensen' },
+const admins = [
+  { id: 0, name: 'John Doe' },
+  { id: 1, name: 'Alex Smith' },
+  { id: 2, name: 'Kate Jensen' },
 ];
-store.update('roles.admins', admins);
+const myAction = {
+  data: admins,
+  type: 'UPDATE_ADMINS'
+}
+store.update('roles.admins', myAction);
 
-var oldState = JSON.parse(localStorage.getItem('APP_STATE_1'));
-store.update('*', oldState);
+//load app state from localStorage
+const myAction = {
+  data: JSON.parse(localStorage.getItem('APP_STATE_1')),
+  type: 'LOAD_STATE'
+}
+store.update('*', myAction);
 ```
 
-getState() method returns app state similar select('*')
-```javascript
-// Signature:
-getState(): any
-```
-```javascript
-// Examples:
-var appState = store.getState();
-```
+#### Note:
+You can subscribe on not fully matching zones, and Spawn will apply callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback if child value changes. If you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback without inspection.
 
-Note: Spawn in the initialization process might accept plain object as initial app state.
-
-Note: Spawn doesn't apply the callback if current data equal privious data.
-
-Note: You can subscribe on not fully matching zones, and Spawn will apply callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback if child value changes. If you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback without inspection.
-
-Examples:
+#### Examples:
 ```javascript
 //Example #1
 const store = Spawn.createStore();
@@ -108,30 +149,36 @@ function callback() {
 store.detect('users.admins', callback);
 
 //update
-store.update('users', {
-  admins: [
-    { id: 0, name: 'John' },
-    { id: 1, name: 'Alex' }
-  ]
-});
+store.update('users',
+    {
+      data: {
+        admins: [
+          { id: 0, name: 'John' },
+          { id: 1, name: 'Alex' }
+        ]
+      },
+      type: 'UPDATE_USERS'
+    }
+  );
 //console output: 'admin name: John'
 
 setTimeout(() => {
   store.update('users', {
-    admins: [
-      { id: 0, name: 'Jess' },
-      { id: 1, name: 'Alex' }
-    ]
-  });
+      data: {
+        admins: [
+          { id: 0, name: 'Jess' },
+          { id: 1, name: 'Alex' }
+        ]
+      },
+      type: 'UPDATE_USERS'
+    }
+  );
 }, 2000);
 
 //console output: 'admin name: Jess'
 ```
 ```javascript
 //Example #2 (Simple app)
-import { createStore } from 'spawn-x';
-
-
 class TodoApp {
   constructor(store) {
     this.store = store;
@@ -139,8 +186,11 @@ class TodoApp {
   }
 
   addTask(task) {
-    this.store.update('todos', this.store.select('todos').concat(task));
-    this.store.update('@ACTIONS.ADD_TASK', new Date().getTime());
+    const todos = this.store.select('todos').concat(task);
+    this.store.update('todos', {
+      data: todos,
+      type: 'ADD_TASK'
+    });
   }
 
   removeTask(id) {
@@ -148,8 +198,10 @@ class TodoApp {
       .select('todos')
       .filter(task => task.id !== id);
 
-    this.store.update('todos', filteredTasks);
-    this.store.update('@ACTIONS.REMOVE_TASK', new Date().getTime());
+    this.store.update('todos', {
+      data: filteredTasks,
+      type: 'REMOVE_TASK'
+    });
   }
 
   completeTask(id, complete) {
@@ -163,16 +215,18 @@ class TodoApp {
         return task;
       });
 
-    this.store.update('todos', updatedTasks);
-    this.store.update('@ACTIONS.CHANGE_COMPLETE', new Date().getTime());
+    this.store.update('todos', {
+      data: updatedTasks,
+      type: 'CHANGE_COMPLETE'
+    });
   }
 }
 
 function combineActions(todos) {
   if (todos.length > 0) {
-    console.log('-----');
     console.log('All todos: ', reportAction(todos));
     console.log('Completed todos:', getCountCompletedAction(todos));
+    console.log('-----');
   }
 }
 
@@ -185,19 +239,21 @@ function getCountCompletedAction(todos) {
 }
 
 function logger(store) {
-  store.detect('*', () => {
-    if (/@/.test(store.select('->'))) {
-      console.log('logger: ', store.select('->') + ' -> ', store.select('*'));
-    }
-  });
+  return next => action => {
+    console.log('action: ', action.type + ' -> ', action.data);
+    next(action);
+  }
 }
 
 ///////////////////////////
 const initialState = {
   todos: []
 };
-const store = createStore(initialState);
-logger(store);
+
+const store = createStore(
+  initialState,
+  addInterceptor(logger)
+);
 
 const app = new TodoApp(store);
 
@@ -226,27 +282,27 @@ app.removeTask(1);
 /*
 console output:
 
-logger:  @@SPAWN/INIT -> ...
+action:  @@SPAWN/INIT -> ...
 -----
 All todos:  1
 Completed todos: 1
-logger: @ACTIONS.ADD_TASK -> ...
+action: ADD_TASK -> ...
 -----
 All todos:  2
 Completed todos: 2
-logger: @ACTIONS.ADD_TASK -> ...
+action: ADD_TASK -> ...
 -----
 All todos:  3
 Completed todos: 2
-logger: @ACTIONS.ADD_TASK -> ...
+action: ADD_TASK -> ...
 -----
 All todos:  3
 Completed todos: 3
-logger: @ACTIONS.CHANGE_COMPLETE -> ...
+action: CHANGE_COMPLETE -> ...
 -----
 All todos:  2
 Completed todos: 2
-logger: @ACTIONS.REMOVE_TASK -> ...
+action: REMOVE_TASK -> ...
 */
 ```
 ## LICENSE
