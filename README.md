@@ -13,6 +13,11 @@ With npm:
 ```
 npm install spawn-x --save
 ```
+With yarn:
+```
+yarn add spawn-x
+```
+
 ```javascript
 import { createStore } from 'spawn-x';
 
