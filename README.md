@@ -32,7 +32,7 @@ With bower:
 bower install spawn-x --save
 ```
 ```html
-<script src="path/to/spawn.js/lib/spawn.umd.min.js"></script>
+<script src="path/to/spawn-x/lib/spawn.umd.min.js"></script>
 ```
 ```javascript
 var store = Spawn.createStore();
