@@ -139,52 +139,70 @@ store.update('*', myAction);
 ```
 
 #### Note:
-You can subscribe on not fully matching zones, and Spawn will apply callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback if child value changes. If you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback without inspection.
+You can subscribe on not fully matching zones, and Spawn will runs callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback if child value changes. If you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback without inspection.
 
 #### Examples:
 ```javascript
 //Example #1
-const store = Spawn.createStore();
+import { createStore } from 'spawn-x';
+
+
+const store = createStore();
 
 function callback() {
-    const admin = store.select(state => state.users.admins[0].name);
-    console.log('admin name: ', admin);
+    console.log('name: ', store.select(state => state.users.admins[0].name));
 }
 
-//subscribe
+//subscribe only on users.admins
 store.detect('users.admins', callback);
 
-//update
-store.update('users',
-    {
-      data: {
-        admins: [
-          { id: 0, name: 'John' },
-          { id: 1, name: 'Alex' }
-        ]
-      },
-      type: 'UPDATE_USERS'
-    }
-  );
-//console output: 'admin name: John'
+//update users
+store.update('users', {
+  data: {
+    admins: [
+      { id: 0, name: 'John' },
+      { id: 1, name: 'Alex' }
+    ]
+  },
+  type: 'UPDATE_USERS'
+});
+//console output: 'name: John'
+
+//update users again with addition of some: 'text'
+setTimeout(() => {
+  store.update('users', {
+    data: {
+      admins: [
+        { id: 0, name: 'John' },
+        { id: 1, name: 'Alex' }
+      ],
+      some: 'text'
+    },
+    type: 'UPDATE_USERS'
+  });
+}, 1000);
+//State updated, but callback not apply and console output not runs, because zone 'users.admins' not modified
 
 setTimeout(() => {
   store.update('users', {
-      data: {
-        admins: [
-          { id: 0, name: 'Jess' },
-          { id: 1, name: 'Alex' }
-        ]
-      },
-      type: 'UPDATE_USERS'
-    }
-  );
+    data: {
+      admins: [
+        { id: 0, name: 'Jess' },
+        { id: 1, name: 'Alex' }
+      ],
+      some: 'text'
+    },
+    type: 'UPDATE_USERS'
+  });
 }, 2000);
 
-//console output: 'admin name: Jess'
+//console output: 'name: Jess'
 ```
 ```javascript
-//Example #2 (Simple app)
+//Example #2 (Simple todo app)
+import { createStore, addInterceptor } from 'spawn-x';
+
+
 class TodoApp {
   constructor(store) {
     this.store = store;
@@ -229,11 +247,9 @@ class TodoApp {
 }
 
 function combineActions(todos) {
-  if (todos.length > 0) {
-    console.log('All todos: ', reportAction(todos));
-    console.log('Completed todos:', getCountCompletedAction(todos));
-    console.log('-----');
-  }
+  console.log('All todos: ', reportAction(todos));
+  console.log('Completed todos:', getCountCompletedAction(todos));
+  console.log('-----');
 }
 
 function reportAction (todos) {
@@ -282,13 +298,14 @@ app.addTask({
 });
 
 app.completeTask(2, true);
-
 app.removeTask(1);
 
 /*
 console output:
 
 action:  @@SPAWN/INIT -> ...
+All todos:  0
+Completed todos: 0
 -----
 All todos:  1
 Completed todos: 1
