@@ -5,7 +5,7 @@
 ![Spawn](./logo.jpg)
 
 ## About
-Spawn is a simple and super small library without dependencies for reactive management of app state which use modified observer pattern where instead names of events uses zone - paths to data into state object. For optimization performance your app Spawn makes update app state, but does not apply the callbacks for this state, if current data equals previous data.
+Spawn is a simple and super small library (7 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state. For optimization performance your app Spawn makes update app state, but does not runs the callbacks for this zone, if current data of zone equals previous data.
 
 
 ## install
