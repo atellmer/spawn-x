@@ -12,8 +12,8 @@
     "build:prod": "set WEBPACK_ENV=build:prod&& webpack",
     "dev": "set WEBPACK_ENV=dev&& webpack --watch",
     "test": "tape test/index.js",
-    "precommit": "npm test",
-    "prepush": "npm test"
+    "precommit": "npm run build && npm test",
+    "prepush": "npm run build && npm test"
   },
   "repository": {
     "type": "git",
