@@ -1,23 +1,28 @@
 {
-  "name": "spawn.js",
+  "name": "spawn-x",
   "version": "2.0.0",
-  "description": "lib for management of application state",
+  "description": "Reactive management for javaScript applications",
   "authors": [
     "AlexPlex"
   ],
   "license": "MIT",
   "main": "./lib/spawn.umd.min.js",
-  "homepage": "https://github.com/atellmer/spawn.js",
+  "homepage": "https://github.com/atellmer/spawn-x",
   "keywords": [
     "state",
     "store",
     "app",
+    "management",
+    "control",
+    "predictable",
+    "live",
+    "observer",
+    "reactive",
     "redux",
     "flux",
     "mobx",
     "observable",
     "rxjs",
-    "reactive",
     "react",
     "reactjs",
     "angular",
@@ -28,7 +33,6 @@
     "**/.*",
     "node_modules",
     "bower_components",
-    "test",
-    "tests"
+    "test"
   ]
 }

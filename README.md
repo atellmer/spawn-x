@@ -1,10 +1,11 @@
-# Spawn
-### App state management 
+# spawn-x
 
-![Spawn](http://2.bp.blogspot.com/_sBl2KZslg98/S_zpYQ4-mFI/AAAAAAAAAD0/5HAjyKHqt7w/s1600/spawn04.jpg)
+### Reactive management for javaScript applications
+
+![Spawn](./logo.jpg)
 
 ## About
-Spawn is a simple and super small library without dependencies for management of app state which use modified pub/sub pattern where instead names of events uses zone - paths to data into state object. For optimization performance your app Spawn makes update app state but does not apply the callback for this state if current data equals previous data.
+Spawn is a simple and super small library without dependencies for reactive management of app state which use modified observer pattern where instead names of events uses zone - paths to data into state object. For optimization performance your app Spawn makes update app state, but does not apply the callbacks for this state, if current data equals previous data.
 
 
 ## install
@@ -19,7 +20,7 @@ const store = createStore();
 ```
 With bower:
 ```
-bower install spawn.js --save
+bower install spawn-x --save
 ```
 ```html
 <script src="path/to/spawn.js/lib/spawn.umd.min.js"></script>

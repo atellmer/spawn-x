@@ -33,12 +33,12 @@ const Spawn = function (initialState, interceptors) {
     }
     if (isFunc(selector)) return selector(clone(state));
 
-    return error('Spawn: the select method takes only a string or function as argument!');
+    return error('spawn-x: the select method takes only a string or function as argument!');
   }
 
   this.detect = (zone, cb) => {
-    if (!isString(zone)) return error('Spawn: the detect method takes only a string for first argument!');
-    if (!isFunc(cb)) return error('Spawn: the detect method takes only a function for second argument!');
+    if (!isString(zone)) return error('spawn-x: the detect method takes only a string for first argument!');
+    if (!isFunc(cb)) return error('spawn-x: the detect method takes only a function for second argument!');
 
     if (!subscribers[zone]) {
       subscribers[zone] = [];
@@ -66,11 +66,11 @@ const Spawn = function (initialState, interceptors) {
   }
 
   this.update = (zone, action) => {
-    if (!isString(zone)) return error(`Spawn: the update method takes only a string for first argument!`);
-    if (!isPlainObject(action)) return error(`Spawn: action must be a plain object!`);
-    if (!hasKey(action, 'data')) return error(`Spawn: action must have a 'data' key!`);
-    if (!hasKey(action, 'type')) return error(`Spawn: action must have a 'type' key!`);
-    if (!(isString(action.type))) return error(`Spawn: type of action must be a string!`);
+    if (!isString(zone)) return error(`spawn-x: the update method takes only a string for first argument!`);
+    if (!isPlainObject(action)) return error(`spawn-x: action must be a plain object!`);
+    if (!hasKey(action, 'data')) return error(`spawn-x: action must have a 'data' key!`);
+    if (!hasKey(action, 'type')) return error(`spawn-x: action must have a 'type' key!`);
+    if (!(isString(action.type))) return error(`spawn-x: type of action must be a string!`);
 
     applyInterceptors(this)(action)(interceptors.concat(update));
 
@@ -93,7 +93,7 @@ const Spawn = function (initialState, interceptors) {
             return this;
           }
 
-          return error(`Spawn: the update method takes only a plain object for replace full state! Check your update('*') method.`);
+          return error(`spawn-x: the update method takes only a plain object for replace full state! Check your update('*') method.`);
         }
 
         for (let i = 0; i < zoneParts.length; i++) {
