@@ -59,7 +59,7 @@ const Spawn = function (initialState, interceptors) {
 
     if (findZoneValue(zone, state)) {
       virtualState = clone(state);
-      applyLogic(zone, subscribers, state, prevState, false);
+      applyLogic({ zone, subscribers, state, prevState, afterUpdate: false });
     }
 
     return this;
@@ -111,7 +111,7 @@ const Spawn = function (initialState, interceptors) {
 
         if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
           state = clone(virtualState);
-          applyLogic(zone, subscribers, state, prevState, true);
+          applyLogic({ zone, subscribers, state, prevState, afterUpdate: true });
           prevState = clone(virtualState);
         } else {
           mapSubscribers(subscribers['*']);

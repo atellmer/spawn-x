@@ -47,7 +47,7 @@ function applyInterceptors(store) {
   return action => interceptors => compose(...interceptors.map(fn => fn(store)))(arg => arg)(clone(action));
 }
 
-function applyLogic(zone, subscribers, state, prevState, afterUpdate) {
+function applyLogic({ zone, subscribers, state, prevState, afterUpdate }) {
   for (let key in subscribers) {
     if (subscribers.hasOwnProperty(key)) {
       if (key === zone) {
