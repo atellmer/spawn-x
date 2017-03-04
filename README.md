@@ -7,6 +7,10 @@
 ## About
 Spawn is a simple and super small library (7 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state. For optimization performance your app Spawn makes update app state, but does not runs the callbacks for this zone, if current data of zone equals previous data.
 
+You can use Spawn independently with another libraryes.
+Also you may be interested: 
+* [react-spawn-x](https://github.com/atellmer/react-spawn-x) (React connector for Spawn)
+
 
 ## install
 With npm:
