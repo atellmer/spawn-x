@@ -77,7 +77,7 @@ const store = createStore({}, addInterceptor(myLoggerInterceptor, myOtherInterce
 const store = createStore(addInterceptor(myLoggerInterceptor, myOtherInterceptor));
 ```
 
-#### Store object after initialization will only have 3 methods: select(), detect(), update()
+#### Store object after initialization will only have 4 methods: select(), detect(), reject(), update()
 
 #### select()
 Method return selected zone from app state. If zone will be equal '*', this method returns full app state. if zone will be a function, method puts the app state in the function argument and apply it.
@@ -89,8 +89,8 @@ select(zone: string | func): any
 // Examples:
 store.select('roles.admins');
 store.select('*'); // full app state
-store.select(function (state) { return state.roles.admins[2] }); // ES5
 store.select(state => state.roles.admins[2]); // ES2015
+store.select(function (state) { return state.roles.admins[2] }); // ES5
 ```
 
 #### detect()
@@ -102,24 +102,44 @@ detect(zone: string, callback: func): instance
 ```
 ```javascript
 // Examples:
-store.detect('roles.admins', function() {
-  var admins = store.select('roles.admins');
-});
+const callback = () => {
+  const admins = store.select('roles.admins');
+  console.log(admins);
+}
+
+store.detect('roles.admins', callback);
+
 store.detect('*', function() {
   console.log('something happened!');
 });
+```
+#### reject()
+Method for the removal of a callback (unsubscribe).
+
+```javascript
+// Signature:
+reject(zone: string, callback: func): instance
+```
+```javascript
+// Examples:
+const callback = () => {
+  const admins = store.select('roles.admins');
+  console.log(admins);
+}
+
+store.reject('roles.admins', callback);
 ```
 
 #### update()
 Method for updates zone. This method takes zone as first argument and action as second. Action must have 'data' field for your data and type. If zone will be equal '*', this method replaces app state on new state and apply all callbacks without checking. It is may be useful to implementation something like time traveling. Returns instance object.
 ```javascript
 // Signature:
-actionType {
-  data: any,
-  type: string
+interface IAction {
+  data: any;
+  type: string;
 }
 
-update(zone: string, action: actionType): instance
+update(zone: string, action: IAction): instance
 ```
 ```javascript
 // Examples:

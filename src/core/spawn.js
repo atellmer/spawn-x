@@ -3,6 +3,7 @@ import {
   clone,
   mapSubscribers,
   checkCallback,
+  removeCallback,
   findZoneValue,
   plainZoneValue,
   autorun,
@@ -60,6 +61,17 @@ const Spawn = function (initialState, interceptors) {
     if (findZoneValue(zone, state)) {
       virtualState = clone(state);
       applyLogic({ zone, subscribers, state, prevState, afterUpdate: false });
+    }
+
+    return this;
+  }
+
+  this.reject = (zone, cb) => {
+    if (!isString(zone)) return error('spawn-x: the reject method takes only a string for first argument!');
+    if (!isFunc(cb)) return error('spawn-x: the reject method takes only a function for second argument!');
+
+    if (subscribers[zone]) {
+      removeCallback(subscribers[zone], cb);
     }
 
     return this;

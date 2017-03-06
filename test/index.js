@@ -127,6 +127,10 @@ test(`store has method`, (t) => {
   }, `detect()`);
 
   t.doesNotThrow(() => {
+    store.reject('*', () => { });
+  }, `reject()`);
+
+  t.doesNotThrow(() => {
     store.update('*', { data: {}, type: 'TEST_TYPE' });
   }, `update()`);
 
@@ -522,6 +526,35 @@ test(`[Detect] state with detect('parent.child')`, (t) => {
 
   store.update('parent.child', { data: 'Hello world', type: 'SOME_UPDATE' });
   t.equal('Hello world', expected);
+
+  t.end();
+});
+
+
+test(`[Reject] callback`, (t) => {
+  let len;
+
+  const initilState = {
+    new: {
+      tasks: []
+    }
+  };
+  const store = createStore(initilState);
+
+  const callback = () => len = store.select('new.tasks').length;
+
+  store.detect('new.tasks', callback);
+
+  store.update('new.tasks', { data: store.select('new.tasks').concat({ name: 'task #1' }), type: 'UPDATE_TASKS' });
+  t.equal(1, len);
+
+  store.update('new.tasks', { data: store.select('new.tasks').concat({ name: 'task #2' }), type: 'UPDATE_TASKS' });
+  t.equal(2, len);
+
+  store.reject('new.tasks', callback);
+
+  store.update('new.tasks', { data: store.select('new.tasks').concat({ name: 'task #3' }), type: 'UPDATE_TASKS' });
+  t.equal(2, len);
 
   t.end();
 });

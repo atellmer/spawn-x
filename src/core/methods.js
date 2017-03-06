@@ -14,6 +14,18 @@ function checkCallback(subscribers, cb) {
   return true;
 }
 
+function removeCallback(subscribers, cb) {
+  subscribers.forEach((item, index) => {
+    if (item === cb) {
+      subscribers.splice(index, 1);
+
+      return true;
+    }
+  });
+
+  return false;
+}
+
 function findZoneValue (zone, state) {
   let zoneParts = zone.split('.'),
       parent = clone(state);
@@ -75,6 +87,7 @@ export {
   clone,
   mapSubscribers,
   checkCallback,
+  removeCallback,
   findZoneValue,
   plainZoneValue,
   autorun,
