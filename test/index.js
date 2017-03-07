@@ -496,11 +496,7 @@ test(`[Detect] state with detect('zone')`, (t) => {
 
   store.detect('tasks', callback);
 
-  const tasks = store.select('tasks');
-
-  tasks.push({
-    name: 'task #1'
-  });
+  let tasks = store.select('tasks').concat({ name: 'task #1' });
 
   store.update('tasks', { data: tasks, type: 'UPDATE_TASKS' });
   t.equal(1, len, `with detect('zone')`);
@@ -558,6 +554,7 @@ test(`[Reject] callback`, (t) => {
 
   t.end();
 });
+
 
 test(`Async update`, (t) => {
   let expected;

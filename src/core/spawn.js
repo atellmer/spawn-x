@@ -23,7 +23,8 @@ const Spawn = function (initialState, interceptors) {
   let state = initialState,
       prevState = {},
       virtualState = {},
-      subscribers = { '*': [] };
+      subscribers = { '*': [] },
+      subscribersArgs = { '*': [] };
 
   this.select = selector => {
     if (isString(selector)) {
@@ -37,30 +38,40 @@ const Spawn = function (initialState, interceptors) {
     return error('spawn-x: the select method takes only a string or function as argument!');
   }
 
-  this.detect = (zone, cb) => {
+  this.detect = (zone, cb, ...args) => {
     if (!isString(zone)) return error('spawn-x: the detect method takes only a string for first argument!');
     if (!isFunc(cb)) return error('spawn-x: the detect method takes only a function for second argument!');
 
-    if (!subscribers[zone]) {
+    if (!subscribers[zone] && !subscribersArgs[zone]) {
       subscribers[zone] = [];
+      subscribersArgs[zone] = [];
     }
 
     if (zone === '*' && checkCallback(subscribers[zone], cb)) {
       subscribers[zone].push(cb);
-      mapSubscribers(subscribers[zone]);
+      subscribersArgs[zone].push(args);
+      mapSubscribers(subscribers[zone], subscribersArgs[zone]);
 
       return this;
     }
 
     if (checkCallback(subscribers[zone], cb)) {
       subscribers[zone].push(cb);
+      subscribersArgs[zone].push(args);
     } else {
       return this;
     }
 
     if (findZoneValue(zone, state)) {
       virtualState = clone(state);
-      applyLogic({ zone, subscribers, state, prevState, afterUpdate: false });
+      applyLogic({
+        zone,
+        subscribers,
+        subscribersArgs,
+        state,
+        prevState,
+        afterUpdate: false 
+      });
     }
 
     return this;
@@ -92,15 +103,14 @@ const Spawn = function (initialState, interceptors) {
       return () => action => {
         let zoneParts = zone.split('.'),
             parent = clone(state),
-            newState = parent,
-            key;
+            newState = parent;
 
         if (zone === '*') {
           if (isPlainObject(action.data)) {
             state = clone(action.data);
             prevState = {};
             virtualState = {};
-            autorun(subscribers);
+            autorun(subscribers, subscribersArgs);
 
             return this;
           }
@@ -123,10 +133,17 @@ const Spawn = function (initialState, interceptors) {
 
         if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
           state = clone(virtualState);
-          applyLogic({ zone, subscribers, state, prevState, afterUpdate: true });
+          applyLogic({
+            zone,
+            subscribers,
+            subscribersArgs,
+            state,
+            prevState,
+            afterUpdate: true 
+          });
           prevState = clone(virtualState);
         } else {
-          mapSubscribers(subscribers['*']);
+          mapSubscribers(subscribers['*'], subscribersArgs['*']);
         }
       }
     }

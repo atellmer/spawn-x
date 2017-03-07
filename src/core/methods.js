@@ -2,8 +2,12 @@ function clone(target) {
   return JSON.parse(JSON.stringify(target));
 }
 
-function mapSubscribers(subscribers) {
-  subscribers.forEach(cb => cb());
+function plainZoneValue (zone, state) {
+  return JSON.stringify(findZoneValue(zone, state));
+}
+
+function mapSubscribers(subscribers, subscribersArgs) {
+  subscribers.forEach((cb, index) => cb(...subscribersArgs[index]));
 }
 
 function checkCallback(subscribers, cb) {
@@ -40,12 +44,8 @@ function findZoneValue (zone, state) {
   return parent;
 }
 
-function plainZoneValue (zone, state) {
-  return JSON.stringify(findZoneValue(zone, state));
-}
-
-function autorun(subscribers) {
-  Object.keys(subscribers).forEach(key => mapSubscribers(subscribers[key]));
+function autorun(subscribers, subscribersArgs) {
+  Object.keys(subscribers).forEach(key => mapSubscribers(subscribers[key], subscribersArgs[key]));
 }
 
 function compose(...funcs) {
@@ -59,27 +59,34 @@ function applyInterceptors(store) {
   return action => interceptors => compose(...interceptors.map(fn => fn(store)))(arg => arg)(clone(action));
 }
 
-function applyLogic({ zone, subscribers, state, prevState, afterUpdate }) {
+function applyLogic({
+  zone,
+  subscribers,
+  subscribersArgs,
+  state,
+  prevState,
+  afterUpdate
+  }) {
   for (let key in subscribers) {
     if (subscribers.hasOwnProperty(key)) {
       if (key === zone) {
-        mapSubscribers(subscribers[key]);
+        mapSubscribers(subscribers[key], subscribersArgs[key]);
         continue;
       }
       if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
         if (plainZoneValue(key, prevState) !== plainZoneValue(key, state)) {
-          mapSubscribers(subscribers[key]);
+          mapSubscribers(subscribers[key], subscribersArgs[key]);
           continue;
         }
       }
       if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
-        mapSubscribers(subscribers[key]);
+        mapSubscribers(subscribers[key], subscribersArgs[key]);
         continue;
       }
     }
   }
   if (afterUpdate) {
-    mapSubscribers(subscribers['*']);
+    mapSubscribers(subscribers['*'], subscribersArgs['*']);
   }
 }
 
