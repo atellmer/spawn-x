@@ -1,5 +1,18 @@
+import {
+  isPlainObject,
+  isArray
+} from '../helpers';
+
+
+function getImmutableCopy(target) {
+  if (isPlainObject(target)) return { ...target };
+  if (isArray(target)) return [ ...target ];
+
+  return target;
+}
+
 function clone(target) {
-  return Object.assign({}, target);
+  return getImmutableCopy(target);
 }
 
 function mapSubscribers(subscribers, subscribersArgs) {
@@ -83,6 +96,7 @@ function applyLogic({
 }
 
 export {
+  getImmutableCopy,
   clone,
   mapSubscribers,
   checkCallback,

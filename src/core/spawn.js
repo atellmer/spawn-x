@@ -1,5 +1,6 @@
 import { INIT_ACTION } from './constants';
 import {
+  getImmutableCopy,
   clone,
   mapSubscribers,
   checkCallback,
@@ -27,10 +28,10 @@ const Spawn = function (initialState, interceptors) {
     if (isString(selector)) {
       switch (selector) {
       case '*': return clone(state);
-      default: return findZoneValue(selector, state);
+      default: return getImmutableCopy(findZoneValue(selector, state));
       }
     }
-    if (isFunc(selector)) return selector(clone(state));
+    if (isFunc(selector)) return getImmutableCopy(selector(clone(state)));
 
     return error('spawn-x: the select method takes only a string or function as argument!');
   }

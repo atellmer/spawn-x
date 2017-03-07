@@ -3,7 +3,7 @@ function isPlainObject(target) {
 }
 
 function isObject(target) {
-  return typeof target === 'object';
+  return typeof target === 'object' && target !== null;
 }
 
 function isArray(target) {
