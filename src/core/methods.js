@@ -11,10 +11,6 @@ function getImmutableCopy(target) {
   return target;
 }
 
-function clone(target) {
-  return getImmutableCopy(target);
-}
-
 function mapSubscribers(subscribers, subscribersArgs) {
   subscribers.forEach((cb, index) => cb(...subscribersArgs[index]));
 }
@@ -41,7 +37,7 @@ function removeCallback(subscribers, cb) {
 
 function findZoneValue(zone, state) {
   let zoneParts = zone.split('.'),
-      parent = clone(state);
+      parent = state;
 
   for (let i = 0; i < zoneParts.length; i++) {
     if (!parent.hasOwnProperty(zoneParts[i])) {
@@ -65,7 +61,7 @@ function compose(...funcs) {
 }
 
 function applyInterceptors(store) {
-  return action => interceptors => compose(...interceptors.map(fn => fn(store)))(arg => arg)(clone(action));
+  return action => interceptors => compose(...interceptors.map(fn => fn(store)))(arg => arg)(action);
 }
 
 function applyLogic({
@@ -97,7 +93,6 @@ function applyLogic({
 
 export {
   getImmutableCopy,
-  clone,
   mapSubscribers,
   checkCallback,
   removeCallback,

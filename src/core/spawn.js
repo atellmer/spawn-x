@@ -1,7 +1,6 @@
 import { INIT_ACTION } from './constants';
 import {
   getImmutableCopy,
-  clone,
   mapSubscribers,
   checkCallback,
   removeCallback,
@@ -27,11 +26,11 @@ const Spawn = function (initialState, interceptors) {
   this.select = selector => {
     if (isString(selector)) {
       switch (selector) {
-      case '*': return clone(state);
+      case '*': return getImmutableCopy(state);
       default: return getImmutableCopy(findZoneValue(selector, state));
       }
     }
-    if (isFunc(selector)) return getImmutableCopy(selector(clone(state)));
+    if (isFunc(selector)) return getImmutableCopy(selector(getImmutableCopy(state)));
 
     return error('spawn-x: the select method takes only a string or function as argument!');
   }
@@ -95,12 +94,11 @@ const Spawn = function (initialState, interceptors) {
     function update() {
       return () => action => {
         let zoneParts = zone.split('.'),
-            parent = clone(state),
-            newState = parent;
+            newState = state;
 
         if (zone === '*') {
           if (isPlainObject(action.data)) {
-            state = clone(action.data);
+            state = getImmutableCopy(action.data);
             autorun(subscribers, subscribersArgs);
 
             return this;
@@ -110,17 +108,15 @@ const Spawn = function (initialState, interceptors) {
         }
 
         for (let i = 0; i < zoneParts.length; i++) {
-          if (!parent.hasOwnProperty(zoneParts[i])) {
-            parent[zoneParts[i]] = {};
+          if (!newState.hasOwnProperty(zoneParts[i])) {
+            newState[zoneParts[i]] = {};
           }
           if (i === zoneParts.length - 1) {
-            parent[zoneParts[i]] = action.data;
+            newState[zoneParts[i]] = action.data;
             break;
           }
-          parent = parent[zoneParts[i]];
+          newState = newState[zoneParts[i]];
         }
-
-        state = clone(newState);
 
         applyLogic({
           zone,
