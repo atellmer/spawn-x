@@ -1,9 +1,5 @@
 function clone(target) {
-  return JSON.parse(JSON.stringify(target));
-}
-
-function plainZoneValue (zone, state) {
-  return JSON.stringify(findZoneValue(zone, state));
+  return Object.assign({}, target);
 }
 
 function mapSubscribers(subscribers, subscribersArgs) {
@@ -30,7 +26,7 @@ function removeCallback(subscribers, cb) {
   return false;
 }
 
-function findZoneValue (zone, state) {
+function findZoneValue(zone, state) {
   let zoneParts = zone.split('.'),
       parent = clone(state);
 
@@ -63,8 +59,6 @@ function applyLogic({
   zone,
   subscribers,
   subscribersArgs,
-  state,
-  prevState,
   afterUpdate
   }) {
   for (let key in subscribers) {
@@ -74,10 +68,8 @@ function applyLogic({
         continue;
       }
       if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
-        if (plainZoneValue(key, prevState) !== plainZoneValue(key, state)) {
-          mapSubscribers(subscribers[key], subscribersArgs[key]);
-          continue;
-        }
+        mapSubscribers(subscribers[key], subscribersArgs[key]);
+        continue;
       }
       if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
         mapSubscribers(subscribers[key], subscribersArgs[key]);
@@ -96,7 +88,6 @@ export {
   checkCallback,
   removeCallback,
   findZoneValue,
-  plainZoneValue,
   autorun,
   compose,
   applyInterceptors,

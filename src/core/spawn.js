@@ -5,7 +5,6 @@ import {
   checkCallback,
   removeCallback,
   findZoneValue,
-  plainZoneValue,
   autorun,
   applyInterceptors,
   applyLogic
@@ -21,8 +20,6 @@ import {
 
 const Spawn = function (initialState, interceptors) {
   let state = initialState,
-      prevState = {},
-      virtualState = {},
       subscribers = { '*': [] },
       subscribersArgs = { '*': [] };
 
@@ -63,13 +60,10 @@ const Spawn = function (initialState, interceptors) {
     }
 
     if (findZoneValue(zone, state)) {
-      virtualState = clone(state);
       applyLogic({
         zone,
         subscribers,
         subscribersArgs,
-        state,
-        prevState,
         afterUpdate: false 
       });
     }
@@ -81,9 +75,7 @@ const Spawn = function (initialState, interceptors) {
     if (!isString(zone)) return error('spawn-x: the reject method takes only a string for first argument!');
     if (!isFunc(cb)) return error('spawn-x: the reject method takes only a function for second argument!');
 
-    if (subscribers[zone]) {
-      removeCallback(subscribers[zone], cb);
-    }
+    if (subscribers[zone]) removeCallback(subscribers[zone], cb);
 
     return this;
   }
@@ -108,8 +100,6 @@ const Spawn = function (initialState, interceptors) {
         if (zone === '*') {
           if (isPlainObject(action.data)) {
             state = clone(action.data);
-            prevState = {};
-            virtualState = {};
             autorun(subscribers, subscribersArgs);
 
             return this;
@@ -129,22 +119,14 @@ const Spawn = function (initialState, interceptors) {
           parent = parent[zoneParts[i]];
         }
 
-        virtualState = clone(newState);
+        state = clone(newState);
 
-        if (plainZoneValue(zone, state) !== plainZoneValue(zone, virtualState)) {
-          state = clone(virtualState);
-          applyLogic({
-            zone,
-            subscribers,
-            subscribersArgs,
-            state,
-            prevState,
-            afterUpdate: true 
-          });
-          prevState = clone(virtualState);
-        } else {
-          mapSubscribers(subscribers['*'], subscribersArgs['*']);
-        }
+        applyLogic({
+          zone,
+          subscribers,
+          subscribersArgs,
+          afterUpdate: true 
+        });
       }
     }
   }
