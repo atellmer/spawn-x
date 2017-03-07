@@ -5,7 +5,7 @@
 ![Spawn](./logo.jpg)
 
 ## About
-Spawn is a simple and super small library (7 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state.
+Spawn is a simple and super small library (8 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state.
 
 You can use Spawn independently with another libraryes.
 Also you may be interested: 
@@ -215,23 +215,26 @@ import { createStore, addInterceptor } from 'spawn-x';
 class TodoApp {
   constructor(store) {
     this.store = store;
-    this.store.detect('todos', () => combineActions(this.store.select('todos')));
+    this.store.detect('today.tasks', () => combineActions(this.store.select('today.tasks')));
   }
 
   addTask(task) {
-    const todos = this.store.select('todos').concat(task);
-    this.store.update('todos', {
-      data: todos,
+    const tasks = this.store
+      .select('today.tasks')
+      .concat(task);
+
+    this.store.update('today.tasks', {
+      data: tasks,
       type: 'ADD_TASK'
     });
   }
 
   removeTask(id) {
     const filteredTasks = this.store
-      .select('todos')
+      .select('today.tasks')
       .filter(task => task.id !== id);
 
-    this.store.update('todos', {
+    this.store.update('today.tasks', {
       data: filteredTasks,
       type: 'REMOVE_TASK'
     });
@@ -239,7 +242,7 @@ class TodoApp {
 
   completeTask(id, complete) {
     const updatedTasks = this.store
-      .select('todos')
+      .select('today.tasks')
       .map(task => {
         if (task.id === id) {
           task.complete = complete;
@@ -248,7 +251,7 @@ class TodoApp {
         return task;
       });
 
-    this.store.update('todos', {
+    this.store.update('today.tasks', {
       data: updatedTasks,
       type: 'CHANGE_COMPLETE'
     });
@@ -271,14 +274,16 @@ function getCountCompletedAction(todos) {
 
 function logger(store) {
   return next => action => {
-    console.log('action: ', action.type + ' -> ', action.data);
+    console.log('action: ', action.type + ' -> ',  JSON.parse(JSON.stringify(action.data)));
     next(action);
   }
 }
 
 ///////////////////////////
 const initialState = {
-  todos: []
+  today: {
+    tasks: []
+  }
 };
 
 const store = createStore(
