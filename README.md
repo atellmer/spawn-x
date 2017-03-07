@@ -5,7 +5,7 @@
 ![Spawn](./logo.jpg)
 
 ## About
-Spawn is a simple and super small library (7 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state. For optimization performance your app Spawn makes update app state, but does not runs the callbacks for this zone, if current data of zone equals previous data.
+Spawn is a simple and super small library (8 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state.
 
 You can use Spawn independently with another libraryes.
 Also you may be interested: 
@@ -131,7 +131,7 @@ store.reject('roles.admins', callback);
 ```
 
 #### update()
-Method for updates zone. This method takes zone as first argument and action as second. Action must have 'data' field for your data and type. If zone will be equal '*', this method replaces app state on new state and apply all callbacks without checking. It is may be useful to implementation something like time traveling. Returns instance object.
+Method for updates zone. This method takes zone as first argument and action as second. Action must have 'data' field for your data and type. If zone will be equal '*', this method replaces app state on new state and apply all callbacks. It is may be useful to implementation something like time traveling. Returns instance object.
 ```javascript
 // Signature:
 interface IAction {
@@ -163,7 +163,7 @@ store.update('*', myAction);
 ```
 
 #### Note:
-You can subscribe on not fully matching zones, and Spawn will runs callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback if child value changes. If you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback without inspection.
+You can subscribe on not fully matching zones, and Spawn will runs callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback. in its turn, if you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback.
 
 #### Examples:
 ```javascript
@@ -174,7 +174,7 @@ import { createStore } from 'spawn-x';
 const store = createStore();
 
 function callback() {
-    console.log('name: ', store.select(state => state.users.admins[0].name));
+  console.log('name: ', store.select(state => state.users.admins[0].name));
 }
 
 //subscribe only on users.admins
@@ -191,21 +191,6 @@ store.update('users', {
   type: 'UPDATE_USERS'
 });
 //console output: 'name: John'
-
-//update users again with addition of some: 'text'
-setTimeout(() => {
-  store.update('users', {
-    data: {
-      admins: [
-        { id: 0, name: 'John' },
-        { id: 1, name: 'Alex' }
-      ],
-      some: 'text'
-    },
-    type: 'UPDATE_USERS'
-  });
-}, 1000);
-//State updated, but callback not apply and console output not runs, because zone 'users.admins' not modified
 
 setTimeout(() => {
   store.update('users', {
@@ -230,23 +215,26 @@ import { createStore, addInterceptor } from 'spawn-x';
 class TodoApp {
   constructor(store) {
     this.store = store;
-    this.store.detect('todos', () => combineActions(this.store.select('todos')));
+    this.store.detect('today.tasks', () => combineActions(this.store.select('today.tasks')));
   }
 
   addTask(task) {
-    const todos = this.store.select('todos').concat(task);
-    this.store.update('todos', {
-      data: todos,
+    const tasks = this.store
+      .select('today.tasks')
+      .concat(task);
+
+    this.store.update('today.tasks', {
+      data: tasks,
       type: 'ADD_TASK'
     });
   }
 
   removeTask(id) {
     const filteredTasks = this.store
-      .select('todos')
+      .select('today.tasks')
       .filter(task => task.id !== id);
 
-    this.store.update('todos', {
+    this.store.update('today.tasks', {
       data: filteredTasks,
       type: 'REMOVE_TASK'
     });
@@ -254,7 +242,7 @@ class TodoApp {
 
   completeTask(id, complete) {
     const updatedTasks = this.store
-      .select('todos')
+      .select('today.tasks')
       .map(task => {
         if (task.id === id) {
           task.complete = complete;
@@ -263,7 +251,7 @@ class TodoApp {
         return task;
       });
 
-    this.store.update('todos', {
+    this.store.update('today.tasks', {
       data: updatedTasks,
       type: 'CHANGE_COMPLETE'
     });
@@ -286,14 +274,16 @@ function getCountCompletedAction(todos) {
 
 function logger(store) {
   return next => action => {
-    console.log('action: ', action.type + ' -> ', action.data);
+    console.log('action: ', action.type + ' -> ',  JSON.parse(JSON.stringify(action.data)));
     next(action);
   }
 }
 
 ///////////////////////////
 const initialState = {
-  todos: []
+  today: {
+    tasks: []
+  }
 };
 
 const store = createStore(

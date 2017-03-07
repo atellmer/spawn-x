@@ -496,17 +496,14 @@ test(`[Detect] state with detect('zone')`, (t) => {
 
   store.detect('tasks', callback);
 
-  const tasks = store.select('tasks');
-
-  tasks.push({
-    name: 'task #1'
-  });
+  let tasks = store.select('tasks').concat({ name: 'task #1' });
 
   store.update('tasks', { data: tasks, type: 'UPDATE_TASKS' });
   t.equal(1, len, `with detect('zone')`);
 
   t.end();
 });
+
 
 test(`[Detect] state with detect('parent.child')`, (t) => {
 
@@ -559,6 +556,7 @@ test(`[Reject] callback`, (t) => {
   t.end();
 });
 
+
 test(`Async update`, (t) => {
   let expected;
 
@@ -608,81 +606,6 @@ test(`Async update`, (t) => {
 
     t.equal('Jess', expected);
   }, 2000);
-
-  t.end();
-});
-
-test(`Not apply callbacks if data not modified`, (t) => {
-  let expected, count = 0;
-
-  const store = createStore();
-
-  store.detect('users.admin.name', () => {
-    expected = store.select('users.admin.name');
-    count++;
-  });
-
-  store.update('users', {
-      data: {
-        admin: {
-          id: 0,
-          name: 'John'
-        }
-      },
-      type: 'UPDATE_USERS'
-    }
-  );
-  t.equal('John', expected);
-  t.equal(1, count);
-
-  setTimeout(() => {
-    store.update('users', {
-      data: {
-        admin: {
-          id: 1000,
-          name: 'John'
-        }
-      },
-      type: 'UPDATE_USERS'
-    });
-    t.equal('John', expected);
-    t.equal(1, count);
-    t.equal(1000, store.select('users.admin.id'));
-  }, 1000);
-
-  setTimeout(() => {
-    store.update('users', {
-      data: {
-        admin: {
-          id: 0,
-          name: 'Jess'
-        }
-      },
-      type: 'UPDATE_USERS'
-    });
-
-    t.equal('Jess', expected);
-    t.equal(2, count);
-    t.equal(0, store.select('users.admin.id'));
-  }, 2000);
-
-  setTimeout(() => {
-    store.update('users', {
-      data: {
-        admin: {
-          id: 0,
-          name: 'Jess',
-          age: 23
-        }
-      },
-      type: 'UPDATE_USERS'
-    });
-
-    t.equal('Jess', expected);
-    t.equal(2, count);
-    t.equal(0, store.select('users.admin.id'));
-    t.equal(23, store.select('users.admin.age'));
-  }, 3000);
 
   t.end();
 });
