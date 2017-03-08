@@ -87,10 +87,10 @@ select(zone: string | func): any
 ```
 ```javascript
 // Examples:
-store.select('roles.admins');
+store.select('foo.bar');
 store.select('*'); // full app state
-store.select(state => state.roles.admins[2]); // ES2015
-store.select(function (state) { return state.roles.admins[2] }); // ES5
+store.select(state => state.foo.bar[2]); // ES2015
+store.select(function (state) { return state.foo.bar[2] }); // ES5
 ```
 
 #### detect()
@@ -103,14 +103,20 @@ detect(zone: string, callback: func): instance
 ```javascript
 // Examples:
 const callback = () => {
-  const admins = store.select('roles.admins');
-  console.log(admins);
+  const data = store.select('foo.bar');
 }
 
-store.detect('roles.admins', callback);
+store.detect('foo.bar', callback);
 
-store.detect('*', function() {
+store.detect('*', () => {
   console.log('something happened!');
+});
+
+//with receipt of action
+store.detect('*', action => {
+  if (action.type === 'KARAMBA') {
+      store.update('foo', { data: 'bar', type: 'KARAMBA_DETECTED' })
+  }
 });
 ```
 #### reject()
@@ -123,11 +129,10 @@ reject(zone: string, callback: func): instance
 ```javascript
 // Examples:
 const callback = () => {
-  const admins = store.select('roles.admins');
-  console.log(admins);
+  const admins = store.select('foo.bar');
 }
 
-store.reject('roles.admins', callback);
+store.reject('foo.bar', callback);
 ```
 
 #### update()
@@ -156,7 +161,7 @@ store.update('roles.admins', myAction);
 
 //load app state from localStorage
 const myAction = {
-  data: JSON.parse(localStorage.getItem('APP_STATE_1')),
+  data: JSON.parse(localStorage.getItem('APP_STATE')),
   type: 'LOAD_STATE'
 }
 store.update('*', myAction);

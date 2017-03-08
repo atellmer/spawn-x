@@ -1,7 +1,6 @@
 import { INIT_ACTION } from './constants';
 import {
   getImmutableCopy,
-  mapSubscribers,
   checkCallback,
   removeCallback,
   findZoneValue,
@@ -42,14 +41,6 @@ const Spawn = function (initialState, interceptors) {
     if (!subscribers[zone] && !subscribersArgs[zone]) {
       subscribers[zone] = [];
       subscribersArgs[zone] = [];
-    }
-
-    if (zone === '*' && checkCallback(subscribers[zone], cb)) {
-      subscribers[zone].push(cb);
-      subscribersArgs[zone].push(args);
-      mapSubscribers(subscribers[zone], subscribersArgs[zone]);
-
-      return this;
     }
 
     if (checkCallback(subscribers[zone], cb)) {
@@ -119,6 +110,7 @@ const Spawn = function (initialState, interceptors) {
         }
 
         applyLogic({
+          action: getImmutableCopy(action),
           zone,
           subscribers,
           subscribersArgs,

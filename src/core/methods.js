@@ -11,8 +11,12 @@ function getImmutableCopy(target) {
   return target;
 }
 
-function mapSubscribers(subscribers, subscribersArgs) {
-  subscribers.forEach((cb, index) => cb(...subscribersArgs[index]));
+function mapSubscribers({
+  subscribers,
+  subscribersArgs,
+  action
+  }) {
+  subscribers.forEach((cb, index) => cb(...subscribersArgs[index], action));
 }
 
 function checkCallback(subscribers, cb) {
@@ -50,7 +54,10 @@ function findZoneValue(zone, state) {
 }
 
 function autorun(subscribers, subscribersArgs) {
-  Object.keys(subscribers).forEach(key => mapSubscribers(subscribers[key], subscribersArgs[key]));
+  Object.keys(subscribers).forEach(key => mapSubscribers({
+    subscribers: subscribers[key],
+    subscribersArgs: subscribersArgs[key]
+  }));
 }
 
 function compose(...funcs) {
@@ -65,29 +72,43 @@ function applyInterceptors(store) {
 }
 
 function applyLogic({
+  action,
   zone,
   subscribers,
   subscribersArgs,
   afterUpdate
   }) {
-  for (let key in subscribers) {
-    if (subscribers.hasOwnProperty(key)) {
-      if (key === zone) {
-        mapSubscribers(subscribers[key], subscribersArgs[key]);
-        continue;
-      }
-      if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
-        mapSubscribers(subscribers[key], subscribersArgs[key]);
-        continue;
-      }
-      if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
-        mapSubscribers(subscribers[key], subscribersArgs[key]);
-        continue;
-      }
+  const keys = Object.keys(subscribers).filter(key => key !== '*');
+
+  keys.forEach(key => {
+    if (key === zone) {
+      mapSubscribers({
+        subscribers: subscribers[key],
+        subscribersArgs: subscribersArgs[key]
+      });
+      return;
     }
-  }
+    if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
+      mapSubscribers({
+        subscribers: subscribers[key],
+        subscribersArgs: subscribersArgs[key]
+      });
+      return;
+    }
+    if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
+      mapSubscribers({
+        subscribers: subscribers[key],
+        subscribersArgs: subscribersArgs[key]
+      });
+      return;
+    }
+  });
   if (afterUpdate) {
-    mapSubscribers(subscribers['*'], subscribersArgs['*']);
+    mapSubscribers({
+      subscribers: subscribers['*'],
+      subscribersArgs: subscribersArgs['*'],
+      action
+    });
   }
 }
 

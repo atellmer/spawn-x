@@ -472,13 +472,49 @@ test(`[Detect] state with detect('*')`, (t) => {
 
   store.detect('*', () => expected++);
 
+  store.update('parent', { data: {}, type: 'TEST_TYPE' });
   t.equal(1, expected);
 
-  store.update('parent', { data: {}, type: 'TEST_TYPE' });
+  store.update('parent.child', { data: 'Hello World', type: 'TEST_TYPE' });
   t.equal(2, expected);
 
-  store.update('parent.child', { data: 'Hello World', type: 'TEST_TYPE' });
-  t.equal(3, expected);
+  t.end();
+});
+
+test(`[Detect] state  with detect('*') and pass action as parametr`, (t) => {
+  let actionType = '';
+
+  const store = createStore();
+
+  store.detect('*', action => {
+    actionType = action.type;
+  });
+
+  store.update('foo', { data: { bar: 'bar' }, type: 'SOME_ACTION' });
+  t.equal('SOME_ACTION', actionType);
+
+  t.end();
+});
+
+test(`[Detect] state and update when action will be received`, (t) => {
+  let actionType = '';
+
+  const store = createStore();
+
+  store.detect('*', action => {
+    if (action.type === 'SOME_ACTION_2') {
+      store.update('foo2', { data: {}, type: 'TADAM' });
+    }
+    if (action.type === 'TADAM') {
+      actionType = action.type;
+    }
+  });
+
+  store.update('foo1', { data: { bar: 'bar' }, type: 'SOME_ACTION_1' });
+  store.update('foo2', { data: { bar: 'bar' }, type: 'SOME_ACTION_2' });
+  store.update('foo3', { data: { bar: 'bar' }, type: 'SOME_ACTION_3' });
+
+  t.equal('TADAM', actionType);
 
   t.end();
 });
