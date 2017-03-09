@@ -10,6 +10,7 @@ Spawn is a simple and super small library (8 kb) without dependencies for reacti
 You can use Spawn independently with another libraryes.
 Also you may be interested: 
 * [react-spawn-x](https://github.com/atellmer/react-spawn-x) (React connector for Spawn)
+* [angularjs-spawn-x](https://github.com/atellmer/angularjs-spawn-x) (AngularJS connector for Spawn)
 
 
 ## install
@@ -32,7 +33,7 @@ With bower:
 bower install spawn-x --save
 ```
 ```html
-<script src="path/to/spawn-x/lib/spawn.umd.min.js"></script>
+<script src="path/to/spawn-x/lib/spawn-x.umd.min.js"></script>
 ```
 ```javascript
 var store = Spawn.createStore();

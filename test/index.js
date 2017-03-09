@@ -1,7 +1,7 @@
 'use strict';
 
 const test = require('tape');
-const { createStore, addInterceptor } = require('../lib/spawn.umd');
+const { createStore, addInterceptor } = require('../lib/spawn-x.umd');
 
 
 test(`addInterceptor don't trows exeption`, (t) => {
