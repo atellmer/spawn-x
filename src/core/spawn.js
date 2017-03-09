@@ -66,7 +66,11 @@ const Spawn = function (initialState, interceptors) {
     if (!isString(zone)) return error('spawn-x: the reject method takes only a string for first argument!');
     if (!isFunc(cb)) return error('spawn-x: the reject method takes only a function for second argument!');
 
-    if (subscribers[zone]) removeCallback(subscribers[zone], cb);
+    if (subscribers[zone]) removeCallback({
+      subscribers: subscribers[zone],
+      subscribersArgs: subscribersArgs[zone],
+      cb
+    });
 
     return this;
   }

@@ -27,10 +27,15 @@ function checkCallback(subscribers, cb) {
   return true;
 }
 
-function removeCallback(subscribers, cb) {
+function removeCallback({
+  subscribers,
+  subscribersArgs,
+  cb
+  }) {
   subscribers.forEach((item, index) => {
     if (item === cb) {
       subscribers.splice(index, 1);
+      subscribersArgs.splice(index, 1);
 
       return true;
     }
