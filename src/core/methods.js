@@ -93,14 +93,14 @@ function applyLogic({
       });
       return;
     }
-    if (zone.length < key.length && new RegExp('^' + '\\' + zone + '.', 'i').test(key)) {
+    if (zone.length < key.length && new RegExp(`^${zone}.`, 'i').test(key)) {
       mapSubscribers({
         subscribers: subscribers[key],
         subscribersArgs: subscribersArgs[key]
       });
       return;
     }
-    if (zone.length > key.length && new RegExp('^' + '\\' + key + '.', 'i').test(zone)) {
+    if (zone.length > key.length && new RegExp(`^${key}.`, 'i').test(zone)) {
       mapSubscribers({
         subscribers: subscribers[key],
         subscribersArgs: subscribersArgs[key]

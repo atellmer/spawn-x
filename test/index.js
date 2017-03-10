@@ -540,6 +540,28 @@ test(`[Detect] state with detect('zone')`, (t) => {
   t.end();
 });
 
+test(`[Detect] state with detect('parent') and update parent.child`, (t) => {
+  let len;
+
+  const initilState = {
+    today: {
+      tasks: []
+    },
+  };
+  const store = createStore(initilState);
+
+  const callback = () => len = store.select('today.tasks').length;
+
+  store.detect('today', callback);
+
+  let tasks = store.select('today.tasks').concat({ name: 'task #1' });
+
+  store.update('today.tasks', { data: tasks, type: 'UPDATE_TASKS' });
+  t.equal(1, len, `with detect('zone')`);
+
+  t.end();
+});
+
 
 test(`[Detect] state with detect('parent.child')`, (t) => {
 
