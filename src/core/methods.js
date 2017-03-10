@@ -84,8 +84,11 @@ function applyLogic({
   afterUpdate
   }) {
   const keys = Object.keys(subscribers).filter(key => key !== '*');
+  const zoneParts = zone.split('.');
 
   keys.forEach(key => {
+    const keyParts = key.split('.');
+
     if (key === zone) {
       mapSubscribers({
         subscribers: subscribers[key],
@@ -93,21 +96,46 @@ function applyLogic({
       });
       return;
     }
-    if (zone.length < key.length && new RegExp(`^${zone}.`, 'i').test(key)) {
-      mapSubscribers({
-        subscribers: subscribers[key],
-        subscribersArgs: subscribersArgs[key]
+
+    if (keyParts.length <= zoneParts.length) {
+      let check = true;
+
+      keyParts.forEach((keyPart, index) => {
+        if (keyPart !== zoneParts[index]) {
+          check = false;
+          return;
+        }
       });
+
+      if (check) {
+        mapSubscribers({
+          subscribers: subscribers[key],
+          subscribersArgs: subscribersArgs[key]
+        });
+      }
       return;
     }
-    if (zone.length > key.length && new RegExp(`^${key}.`, 'i').test(zone)) {
-      mapSubscribers({
-        subscribers: subscribers[key],
-        subscribersArgs: subscribersArgs[key]
+
+    if (keyParts.length > zoneParts.length) {
+      let check = true;
+
+      zoneParts.forEach((zonePart, index) => {
+        if (zonePart !== keyParts[index]) {
+          check = false;
+          return;
+        }
       });
+
+      if (check) {
+        mapSubscribers({
+          subscribers: subscribers[key],
+          subscribersArgs: subscribersArgs[key]
+        });
+      }
       return;
     }
   });
+
   if (afterUpdate) {
     mapSubscribers({
       subscribers: subscribers['*'],

@@ -564,7 +564,6 @@ test(`[Detect] state with detect('parent') and update parent.child`, (t) => {
 
 
 test(`[Detect] state with detect('parent.child')`, (t) => {
-
   let expected;
 
   const initilState = {
@@ -585,6 +584,55 @@ test(`[Detect] state with detect('parent.child')`, (t) => {
   t.end();
 });
 
+test(`[Detect] state with detect('parent.child') and update wider zone`, (t) => {
+  let expected;
+
+  const initilState = {
+    parent: {
+      child: 'Hello'
+    },
+  };
+  const store = createStore(initilState);
+
+  store.detect('parent.child', () => {
+    expected = store.select('parent.child');
+  });
+  t.equal('Hello', expected);
+
+  store.update('parent', {
+    data:  {
+      child: 'Hello world'
+    },
+    type: 'SOME_UPDATE'
+  });
+  t.equal('Hello world', expected);
+
+  t.end();
+});
+
+test(`[Detect] state with detect('parent.child') and update narrow zone`, (t) => {
+  let expected;
+
+  const initilState = {
+    parent: {
+      child: 'Hello'
+    },
+  };
+  const store = createStore(initilState);
+
+  store.detect('parent', () => {
+    expected = store.select('parent.child');
+  });
+  t.equal('Hello', expected);
+
+  store.update('parent.child', {
+    data: 'Hello world',
+    type: 'SOME_UPDATE'
+  });
+  t.equal('Hello world', expected);
+
+  t.end();
+});
 
 test(`[Reject] callback`, (t) => {
   let len;
