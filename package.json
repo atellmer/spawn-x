@@ -1,10 +1,11 @@
 {
   "name": "spawn-x",
-  "version": "2.3.4",
+  "version": "2.3.5",
   "description": "Reactive management for javaScript applications",
   "author": "AlexPlex",
   "license": "MIT",
   "main": "./lib/spawn-x.umd.js",
+  "typings": "./index.d.ts",
   "homepage": "https://github.com/atellmer/spawn-x",
   "scripts": {
     "build": "npm run build:dev && npm run build:prod",
