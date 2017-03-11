@@ -171,9 +171,8 @@ store.update('*', myAction);
 #### Note:
 You can subscribe on not fully matching zones, and Spawn will runs callbacks correctly. For example: if you subscribe on 'grandpa.parent.child' and will update 'grandpa' or 'grandpa.parent', then 'grandpa.parent.child' will launch own callback. in its turn, if you subscribe on 'grandpa' and will update 'grandpa.parent' or 'grandpa.parent.child', then 'grandpa' will launch own callback.
 
-#### Examples:
+#### Example #1
 ```javascript
-//Example #1
 import { createStore } from 'spawn-x';
 
 
@@ -213,8 +212,8 @@ setTimeout(() => {
 
 //console output: 'name: Jess'
 ```
+#### Example #2 "Simple todo app"
 ```javascript
-//Example #2 (Simple todo app)
 import { createStore, addInterceptor } from 'spawn-x';
 
 
@@ -348,6 +347,69 @@ Completed todos: 2
 action: REMOVE_TASK -> ...
 */
 ```
+#### Example #3 "Redux-like style"
+```javascript
+import { createStore } from 'spawn-x';
+
+
+const btn = document.querySelector('#addTrack');
+const input = document.querySelector('#input');
+const list = document.querySelector('#trackList');
+
+const store = createStore();
+
+// Constants
+const ADD_TRACK = 'ADD_TRACK';
+const RENDER_TRACKS = 'RENDER_TRACKS';
+const UPDATE_STORE = 'UPDATE_STORE';
+
+// fake Reducer
+store.detect('*', action => {
+  console.log(action);
+
+  switch(action.type) {
+    case ADD_TRACK: {
+      store.update('tracks', { 
+        type: UPDATE_STORE,
+        data: store.select('tracks') ? store.select('tracks').concat(action.data) : [].concat(action.data)
+      });
+    }
+  }
+});
+
+// Action Creators
+const addTrack = data => {
+  store.update('', { 
+    type: ADD_TRACK,
+    data: data
+  });
+}
+
+const renderTracks = () => {
+  list.innerHTML = '';
+
+  store
+  .select('tracks')
+  .forEach(item => {
+    const li = document.createElement('li');
+
+    li.textContent = item;
+    list.appendChild(li);
+  });
+
+  store.update('', { 
+    type: RENDER_TRACKS,
+    data: null
+  });
+}
+
+btn.addEventListener('click', () => {
+  addTrack(input.value);
+  renderTracks();
+  input.value = '';
+});
+```
+
 ## LICENSE
 
 MIT © [Alex Plex](https://github.com/atellmer)
