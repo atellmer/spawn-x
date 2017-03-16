@@ -1,4 +1,5 @@
-![Spawn](./logo.jpg)
+![Spawn](./assets/logo.png)
+
 # spawn-x
 
 ### Reactive management for javaScript applications
