@@ -9,6 +9,7 @@ Spawn is a simple and super small library (8 kb) without dependencies for reacti
 
 You can use Spawn independently with another libraryes.
 Also you may be interested: 
+* [spawn-x-effects](https://github.com/atellmer/spawn-x-effects) (Interceptor for cascade update)
 * [react-spawn-x](https://github.com/atellmer/react-spawn-x) (React connector for Spawn)
 * [angular-spawn-x](https://github.com/atellmer/angular-spawn-x) (Angular connector for Spawn)
 * [angularjs-spawn-x](https://github.com/atellmer/angularjs-spawn-x) (AngularJS connector for Spawn)
