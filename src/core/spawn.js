@@ -1,4 +1,4 @@
-import { INIT_ACTION } from './constants';
+import { INIT } from './constants';
 import {
   getImmutableCopy,
   checkCallback,
@@ -108,9 +108,9 @@ const Spawn = function (initialState, interceptors) {
           }
           if (i === zoneParts.length - 1) {
             newState[zoneParts[i]] = action.data;
-            break;
+          } else {
+            newState = newState[zoneParts[i]];
           }
-          newState = newState[zoneParts[i]];
         }
 
         applyLogic({
@@ -124,7 +124,7 @@ const Spawn = function (initialState, interceptors) {
     }
   }
 
-  applyInterceptors(this)(INIT_ACTION)(interceptors.concat(store => next => action => next(action)));
+  applyInterceptors(this)(INIT)(interceptors.concat(store => next => action => next(action)));
 }
 
 export {

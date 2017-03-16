@@ -1,1 +1,1 @@
-export const INIT_ACTION = { data: {}, type: '@@SPAWN/INIT' };
+export const INIT = { data: {}, type: '@@SPAWN/INIT' };

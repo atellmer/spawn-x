@@ -1,8 +1,7 @@
+![Spawn](./logo.jpg)
 # spawn-x
 
 ### Reactive management for javaScript applications
-
-![Spawn](./logo.jpg)
 
 ## About
 Spawn is a simple and super small library (8 kb) without dependencies for reactive management of app state which use modified observer pattern, where instead names of events, uses zones - paths to data into app state.
